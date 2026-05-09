@@ -7,7 +7,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "echo \"No tests yet\""
+    "test": "node --test ../../test/artifact-writer.test.mjs"
   },
   "dependencies": {
     "@ghost-engineer/shared": "^0.1.0"

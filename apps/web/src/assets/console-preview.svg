@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="560" viewBox="0 0 920 560" role="img" aria-labelledby="title desc">
+  <title id="title">Ghost Engineer console preview</title>
+  <desc id="desc">A terminal and artifact dashboard preview showing Ghost Engineer repository analysis.</desc>
+  <rect width="920" height="560" rx="20" fill="#f4f6f8"/>
+  <rect x="44" y="42" width="832" height="476" rx="14" fill="#17191c"/>
+  <circle cx="78" cy="76" r="8" fill="#e0564a"/>
+  <circle cx="104" cy="76" r="8" fill="#d9a441"/>
+  <circle cx="130" cy="76" r="8" fill="#36a269"/>
+  <text x="62" y="128" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="22" fill="#f7f1e8">$ ghost analyze . --bob</text>
+  <text x="62" y="176" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#8fd6a4">Ghost Engineer analyzed ghost-engineer</text>
+  <text x="62" y="214" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#d8dee9">Type: Node.js CLI monorepo</text>
+  <text x="62" y="252" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#d8dee9">Risk findings: 0</text>
+  <text x="62" y="290" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#d8dee9">Workspace: .ghost</text>
+  <text x="62" y="328" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#d8dee9">Bob response: .ghost/bob/architecture-response.md</text>
+  <rect x="62" y="374" width="232" height="88" rx="10" fill="#26313a"/>
+  <text x="84" y="410" font-family="Inter, Arial, sans-serif" font-size="16" fill="#f7f1e8">architecture.json</text>
+  <text x="84" y="438" font-family="Inter, Arial, sans-serif" font-size="14" fill="#9fb0bf">system map</text>
+  <rect x="324" y="374" width="232" height="88" rx="10" fill="#283328"/>
+  <text x="346" y="410" font-family="Inter, Arial, sans-serif" font-size="16" fill="#f7f1e8">bob-analysis.md</text>
+  <text x="346" y="438" font-family="Inter, Arial, sans-serif" font-size="14" fill="#a9c9aa">reasoning seed</text>
+  <rect x="586" y="374" width="232" height="88" rx="10" fill="#3a2f27"/>
+  <text x="608" y="410" font-family="Inter, Arial, sans-serif" font-size="16" fill="#f7f1e8">final-report.md</text>
+  <text x="608" y="438" font-family="Inter, Arial, sans-serif" font-size="14" fill="#d6b08c">release notes</text>
+</svg>

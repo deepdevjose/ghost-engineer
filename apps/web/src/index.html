@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Install and verify Ghost Engineer, the IBM Bob powered repository intelligence CLI.">
+    <title>Ghost Engineer Installer</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#installer" aria-label="Ghost Engineer installer">
+        <span class="brand-mark">GE</span>
+        <span>Ghost Engineer</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="#installer">Install</a>
+        <a href="#commands">Commands</a>
+        <a href="#artifacts">Artifacts</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="installer" id="installer">
+        <div class="installer-copy">
+          <p class="eyebrow">IBM Bob powered CLI</p>
+          <h1>Install Ghost Engineer and recover repository intelligence.</h1>
+          <p class="summary">Detect your environment, install the CLI, verify Bob, and generate the local `.ghost/` workspace from one guided screen.</p>
+          <div class="actions" aria-label="Primary install actions">
+            <button class="primary" data-copy="curl -fsSL https://ghost-engineer.dev/install.sh | bash">Copy curl install</button>
+            <a class="secondary" href="./install.sh" download>Download install.sh</a>
+          </div>
+        </div>
+        <div class="installer-visual" aria-label="Ghost Engineer console output preview">
+          <img src="./assets/console-preview.svg" alt="Ghost Engineer CLI analysis preview">
+        </div>
+      </section>
+
+      <section class="workbench" aria-label="Installer workbench">
+        <div class="status-panel">
+          <h2>Detected System</h2>
+          <dl>
+            <div>
+              <dt>Platform</dt>
+              <dd id="platform-value">Checking...</dd>
+            </div>
+            <div>
+              <dt>Shell</dt>
+              <dd id="shell-value">Unix shell recommended</dd>
+            </div>
+            <div>
+              <dt>Bob CLI</dt>
+              <dd>Run `bob --help` locally</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="command-panel" id="commands">
+          <div class="panel-heading">
+            <h2>Install Commands</h2>
+            <div class="tabs" role="tablist" aria-label="Install mode">
+              <button class="tab active" data-tab="global" type="button">Global</button>
+              <button class="tab" data-tab="source" type="button">Source</button>
+            </div>
+          </div>
+
+          <div class="command-set active" data-panel="global">
+            <pre><code>curl -fsSL https://ghost-engineer.dev/install.sh | bash
+ghost analyze .
+ghost analyze . --bob</code></pre>
+          </div>
+
+          <div class="command-set" data-panel="source">
+            <pre><code>git clone https://github.com/deepdevjose/ghost-engineer.git
+cd ghost-engineer
+npm install
+npm run build
+npm run dev -w @ghost-engineer/cli -- analyze . --bob</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="artifacts" id="artifacts">
+        <div>
+          <p class="eyebrow">Local workspace</p>
+          <h2>Generated `.ghost/` artifacts</h2>
+        </div>
+        <div class="artifact-grid">
+          <article>
+            <h3>Architecture</h3>
+            <p>`architecture.json` and `dependency-map.json` capture structure, scripts, packages, and entry points.</p>
+          </article>
+          <article>
+            <h3>Bob Reasoning</h3>
+            <p>`bob/*-prompt.md` and `bob/*-response.md` preserve the exact context sent to IBM Bob.</p>
+          </article>
+          <article>
+            <h3>Reports</h3>
+            <p>`docs/`, `patches/`, and `reports/` keep onboarding, test, patch, and release notes together.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>
