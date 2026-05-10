@@ -23,7 +23,7 @@ for (const tab of tabs) {
 for (const button of document.querySelectorAll("[data-copy]")) {
   button.addEventListener("click", async () => {
     const value = button.getAttribute("data-copy") ?? "";
-    await copyValue(value);
+    await copyValue(value, button);
   });
 }
 
@@ -31,7 +31,7 @@ for (const button of document.querySelectorAll("[data-copy-target]")) {
   button.addEventListener("click", async () => {
     const targetId = button.getAttribute("data-copy-target") ?? "";
     const target = document.getElementById(targetId);
-    await copyValue(target?.textContent?.trim() ?? "");
+    await copyValue(target?.textContent?.trim() ?? "", button);
   });
 }
 
@@ -62,7 +62,7 @@ function showToast(message) {
   }, 1800);
 }
 
-async function copyValue(value) {
+async function copyValue(value, button) {
   if (!value) {
     return;
   }
@@ -70,7 +70,18 @@ async function copyValue(value) {
   try {
     await navigator.clipboard.writeText(value);
     showToast("Command copied");
+    showCopiedState(button);
   } catch {
     showToast(value);
   }
+}
+
+function showCopiedState(button) {
+  const originalLabel = button.textContent;
+  button.textContent = "Copied";
+  button.setAttribute("data-copied", "true");
+  window.setTimeout(() => {
+    button.textContent = originalLabel;
+    button.removeAttribute("data-copied");
+  }, 1600);
 }

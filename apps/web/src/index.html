@@ -17,7 +17,7 @@
       </a>
       <nav aria-label="Primary navigation">
         <a href="#installer">Install</a>
-        <a href="#commands">Commands</a>
+        <a href="#commands">Workflow</a>
         <a href="#artifacts">Artifacts</a>
       </nav>
     </header>
@@ -25,23 +25,23 @@
     <main>
       <section class="hero" id="installer">
         <div class="hero-copy">
-          <p class="eyebrow">Powered by IBM Bob</p>
-          <h1>Ghost Engineer</h1>
-          <p class="tagline">Recover software intelligence. Evolve systems with confidence.</p>
-          <p class="summary">A Unix-first CLI that reconstructs repository intelligence locally, writes a `.ghost/` workspace, and sends structured context to Bob when you ask for AI reasoning.</p>
+          <p class="eyebrow">Ghost Engineer</p>
+          <h1>Understand any repository before you change it.</h1>
+          <p class="summary">A Unix-first CLI that reconstructs repository intelligence locally, writes a `.ghost/` workspace, and sends structured context to IBM Bob only when you ask for AI reasoning.</p>
           <div class="actions" aria-label="Primary install actions">
             <button class="primary" data-copy="curl -fsSL https://ghost-engineer.dev/install.sh | bash" type="button">Copy install command</button>
             <a class="secondary" href="./install.sh" download>Download install.sh</a>
           </div>
+          <p class="bob-note">Powered by IBM Bob for optional reasoning. Deterministic analysis works locally without Bob.</p>
         </div>
 
-        <div class="hero-panel" aria-label="Ghost Engineer install panel">
-          <div class="ghost-mark">
+        <div class="hero-panel" aria-label="Ghost Engineer first run">
+          <div class="hero-panel-heading">
             <img src="./assets/bobghost.png" alt="Ghost Engineer icon">
-          </div>
-          <div class="powered">
-            <span>IBM</span>
-            <span>Bob</span>
+            <div>
+              <p>First run</p>
+              <strong>Install once. Run anywhere.</strong>
+            </div>
           </div>
           <div class="terminal">
             <div class="terminal-header">
@@ -49,28 +49,116 @@
               <button data-copy-target="hero-command" type="button">Copy</button>
             </div>
             <pre><code id="hero-command">curl -fsSL https://ghost-engineer.dev/install.sh | bash
-ghost analyze .
-ghost explain
-ghost analyze . --bob</code></pre>
+cd any-repository
+ghost analyze .</code></pre>
+            <pre class="terminal-result" aria-label="Ghost analyze result"><code>Ghost Engineer analyzed any-repository
+Workspace created: .ghost/
+Start here: .ghost/project-summary.md</code></pre>
           </div>
-          <div class="signal-grid" aria-label="Release signals">
+          <div class="hero-output" aria-label="Generated workspace preview">
+            <span>Writes local intelligence</span>
+            <ul>
+              <li>.ghost/architecture.json</li>
+              <li>.ghost/dependency-map.json</li>
+              <li>.ghost/project-summary.md</li>
+            </ul>
+          </div>
+          <div class="signal-grid" aria-label="Product signals">
             <div>
-              <strong>0.1</strong>
-              <span>Release</span>
+              <strong>Install once</strong>
+              <span>Global `ghost` command</span>
             </div>
             <div>
-              <strong>Local</strong>
-              <span>Core scan</span>
+              <strong>Run anywhere</strong>
+              <span>Open any repository</span>
             </div>
             <div>
-              <strong>Bob</strong>
-              <span>Reasoning</span>
+              <strong>Bob optional</strong>
+              <span>AI reasoning on demand</span>
             </div>
           </div>
         </div>
       </section>
 
+      <section class="flow" id="commands" aria-label="Ghost Engineer workflow">
+        <div class="section-heading">
+          <p class="section-kicker">Workflow</p>
+          <h2>From install to repository context.</h2>
+        </div>
+        <div class="flow-grid">
+          <article>
+            <span>01</span>
+            <h3>Install once</h3>
+            <p>Global CLI, available from any repository.</p>
+            <pre><code>curl -fsSL https://ghost-engineer.dev/install.sh | bash</code></pre>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Run anywhere</h3>
+            <p>Open a codebase and scan it locally.</p>
+            <pre><code>cd any-repository
+ghost analyze .</code></pre>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Understand first</h3>
+            <p>Get architecture, dependencies, and summaries.</p>
+            <pre><code>.ghost/
+├── architecture.json
+├── dependency-map.json
+└── project-summary.md</code></pre>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Ask Bob when useful</h3>
+            <p>Optional AI reasoning on top of local context.</p>
+            <pre><code>ghost explain
+ghost analyze . --bob # optional</code></pre>
+          </article>
+        </div>
+      </section>
+
       <section class="workbench" aria-label="Installer workbench">
+        <div class="command-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Install path</p>
+              <h2>Install</h2>
+              <p class="panel-copy">Global installs the CLI for any repository. Source is for local development from this repo.</p>
+            </div>
+            <div class="tabs" role="tablist" aria-label="Install mode">
+              <button class="tab active" data-tab="global" type="button">Global</button>
+              <button class="tab" data-tab="source" type="button">Source</button>
+            </div>
+          </div>
+
+          <div class="command-set active" data-panel="global">
+            <div class="command-toolbar">
+              <span>Install once and use `ghost` from any repository.</span>
+              <button data-copy-target="global-command" type="button">Copy</button>
+            </div>
+            <pre><code id="global-command">curl -fsSL https://ghost-engineer.dev/install.sh | bash
+ghost analyze .
+ghost explain
+ghost analyze . --bob</code></pre>
+          </div>
+
+          <div class="command-set" data-panel="source">
+            <div class="command-toolbar">
+              <span>Clone the repo and link the CLI for development.</span>
+              <button data-copy-target="source-command" type="button">Copy</button>
+            </div>
+            <pre><code id="source-command">git clone https://github.com/deepdevjose/ghost-engineer.git
+cd ghost-engineer
+npm install
+npm run build
+cd apps/cli
+npm link
+cd ../..
+ghost analyze .</code></pre>
+          </div>
+        </div>
+
         <div class="status-panel">
           <p class="section-kicker">Environment</p>
           <h2>System check</h2>
@@ -89,68 +177,46 @@ ghost analyze . --bob</code></pre>
             </div>
           </dl>
         </div>
-
-        <div class="command-panel" id="commands">
-          <div class="panel-heading">
-            <div>
-              <p class="section-kicker">Install path</p>
-              <h2>Commands</h2>
-            </div>
-            <div class="tabs" role="tablist" aria-label="Install mode">
-              <button class="tab active" data-tab="global" type="button">Global</button>
-              <button class="tab" data-tab="source" type="button">Source</button>
-            </div>
-          </div>
-
-          <div class="command-set active" data-panel="global">
-            <div class="command-toolbar">
-              <span>cloudflare-ready source installer</span>
-              <button data-copy-target="global-command" type="button">Copy</button>
-            </div>
-            <pre><code id="global-command">curl -fsSL https://ghost-engineer.dev/install.sh | bash
-ghost analyze .
-ghost explain
-ghost analyze . --bob</code></pre>
-          </div>
-
-          <div class="command-set" data-panel="source">
-            <div class="command-toolbar">
-              <span>local source checkout</span>
-              <button data-copy-target="source-command" type="button">Copy</button>
-            </div>
-            <pre><code id="source-command">git clone https://github.com/deepdevjose/ghost-engineer.git
-cd ghost-engineer
-npm install
-npm run build
-cd apps/cli
-npm link
-cd ../..
-ghost analyze .</code></pre>
-          </div>
-        </div>
       </section>
 
       <section class="artifacts" id="artifacts">
         <div class="section-heading">
           <p class="section-kicker">Local workspace</p>
-          <h2>Generated `.ghost/` artifacts</h2>
+          <h2>What `.ghost/` gives you.</h2>
         </div>
-        <div class="artifact-grid">
-          <article>
-            <span>01</span>
-            <h3>Architecture</h3>
-            <p>`architecture.json`, `dependency-map.json`, and `project-summary.md` capture structure, scripts, packages, and entry points.</p>
-          </article>
-          <article>
-            <span>02</span>
-            <h3>Bob Reasoning</h3>
-            <p>`bob/*-prompt.md` and `bob/*-response.md` preserve the exact context sent to IBM Bob.</p>
-          </article>
-          <article>
-            <span>03</span>
-            <h3>Reports</h3>
-            <p>`docs/`, `patches/`, and `reports/` keep onboarding, initial analysis, test, patch, and release notes together.</p>
-          </article>
+        <div class="artifact-layout">
+          <div class="tree-panel" aria-label="Ghost workspace tree">
+            <pre><code>.ghost/
+├── architecture.json
+├── dependency-map.json
+├── project-summary.md
+├── bob-analysis.md
+├── docs/
+│   ├── onboarding.md
+│   └── test-plan.md
+├── reports/
+│   ├── initial-analysis.md
+│   └── final-report.md
+├── patches/
+└── bob/</code></pre>
+          </div>
+          <div class="artifact-grid">
+            <article>
+              <span>01</span>
+              <h3>Architecture</h3>
+              <p>Structure, scripts, packages, entry points, language mix, and framework signals.</p>
+            </article>
+            <article>
+              <span>02</span>
+              <h3>Local context</h3>
+              <p>Human-readable summaries and reports before any AI reasoning is required.</p>
+            </article>
+            <article>
+              <span>03</span>
+              <h3>Bob reasoning</h3>
+              <p>Prompt and response artifacts when you choose to send structured context to IBM Bob.</p>
+            </article>
+          </div>
         </div>
       </section>
     </main>
