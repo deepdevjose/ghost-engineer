@@ -32,11 +32,13 @@ export function WorkbenchApp({
   snapshot,
   refresh,
   colorEnabled,
+  clearScreen = () => {},
 }: {
   services: WorkbenchServices;
   snapshot: WorkbenchSnapshot;
   refresh: () => void;
   colorEnabled: boolean;
+  clearScreen?: () => void;
 }) {
   const app = useApp();
   const mountedRef = useRef(true);
@@ -130,6 +132,7 @@ export function WorkbenchApp({
       }
 
       if (input === "?") {
+        clearScreen();
         setShowWelcome(false);
         setShowHelp(true);
         setInstallConfirmation(false);
@@ -138,6 +141,7 @@ export function WorkbenchApp({
       }
 
       if (input === "a") {
+        clearScreen();
         setShowWelcome(false);
         setActiveView("analyze");
         setSelectedIndex(indexForView("analyze"));
@@ -146,6 +150,7 @@ export function WorkbenchApp({
       }
 
       if (input === "b") {
+        clearScreen();
         setShowWelcome(false);
         setActiveView("bob");
         setSelectedIndex(indexForView("bob"));
@@ -154,6 +159,7 @@ export function WorkbenchApp({
       }
 
       if (key.return) {
+        clearScreen();
         setShowWelcome(false);
         setInstallConfirmation(false);
         addActivity("info", "Workbench opened");
@@ -168,12 +174,14 @@ export function WorkbenchApp({
     }
 
     if (input === "?") {
+      clearScreen();
       setShowHelp((current) => !current);
       setInstallConfirmation(false);
       return;
     }
 
     if (input === "r") {
+      clearScreen();
       setInstallConfirmation(false);
       refresh();
       addActivity("info", "Status refreshed");
@@ -181,12 +189,14 @@ export function WorkbenchApp({
     }
 
     if (key.upArrow || input === "k") {
+      clearScreen();
       setInstallConfirmation(false);
       setSelectedIndex((current) => moveSelection(current, -1));
       return;
     }
 
     if (key.downArrow || input === "j") {
+      clearScreen();
       setInstallConfirmation(false);
       setSelectedIndex((current) => moveSelection(current, 1));
       return;
@@ -194,6 +204,7 @@ export function WorkbenchApp({
 
     if (key.return) {
       const selectedView = viewAt(selectedIndex);
+      clearScreen();
       setInstallConfirmation(false);
       setActiveView(selectedView);
       runPrimaryAction(selectedView);
@@ -201,6 +212,7 @@ export function WorkbenchApp({
     }
 
     if (activeView === "analyze" && input === "b") {
+      clearScreen();
       setInstallConfirmation(false);
       runTask("analyze", "Bob-powered analysis", () => services.analyzeWithBob().summary);
       return;
@@ -208,6 +220,7 @@ export function WorkbenchApp({
 
     if (activeView === "bob" && input === "i") {
       if (!installConfirmation) {
+        clearScreen();
         setInstallConfirmation(true);
         addActivity("warning", "Bob installer confirmation requested");
         setLastOutputByView((current) => ({
@@ -220,6 +233,7 @@ export function WorkbenchApp({
         return;
       }
 
+      clearScreen();
       setInstallConfirmation(false);
       runTask("bob", "Bob installer", () => services.setupBob(true));
     }

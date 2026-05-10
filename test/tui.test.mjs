@@ -13,7 +13,12 @@ import { test } from "node:test";
 import { analyzeRepository } from "../packages/core/dist/index.js";
 import {
   actionForView,
+  CLEAR_SCREEN,
+  ENTER_ALTERNATE_SCREEN,
+  EXIT_ALTERNATE_SCREEN,
   createErrorSnapshot,
+  clearInteractiveScreen,
+  enterInteractiveScreen,
   loadWorkbenchSnapshot,
   moveSelection,
   renderWelcomeText,
@@ -138,6 +143,27 @@ test("welcome rendering exposes professional startup context", () => {
   assert.match(welcome, /Helpful keys/);
 });
 
+test("interactive screen helpers clear and restore terminal state", () => {
+  const writes = [];
+  const terminal = {
+    write(value) {
+      writes.push(String(value));
+      return true;
+    },
+  };
+
+  clearInteractiveScreen(terminal);
+  const restore = enterInteractiveScreen(terminal);
+  restore();
+  restore();
+
+  assert.equal(writes[0], CLEAR_SCREEN);
+  assert.match(writes[1], new RegExp(escapeRegExp(ENTER_ALTERNATE_SCREEN)));
+  assert.match(writes[1], new RegExp(escapeRegExp(CLEAR_SCREEN)));
+  assert.match(writes[2], new RegExp(escapeRegExp(EXIT_ALTERNATE_SCREEN)));
+  assert.equal(writes.length, 3);
+});
+
 test("navigation wraps through sidebar items", () => {
   assert.equal(moveSelection(0, -1), 9);
   assert.equal(moveSelection(9, 1), 0);
@@ -193,6 +219,10 @@ function createFixtureRepository(prefix) {
   );
   writeFileSync(join(root, "src", "index.js"), "export const ok = true;\n");
   return root;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function createFakeBob(root) {

@@ -3,6 +3,7 @@ import { render } from "ink";
 import { WorkbenchApp } from "./components/WorkbenchApp.js";
 import { createErrorSnapshot, createWorkbenchServices, loadWorkbenchSnapshot } from "./services.js";
 import { renderStaticWorkbench } from "./render-static.js";
+import { clearInteractiveScreen, enterInteractiveScreen } from "./screen.js";
 import { shouldUseColor } from "./theme.js";
 import type { WorkbenchServices } from "./types.js";
 
@@ -21,6 +22,15 @@ export {
   loadWorkbenchSnapshot,
 } from "./services.js";
 export { renderStaticWorkbench } from "./render-static.js";
+export {
+  CLEAR_SCREEN,
+  ENTER_ALTERNATE_SCREEN,
+  EXIT_ALTERNATE_SCREEN,
+  HIDE_CURSOR,
+  SHOW_CURSOR,
+  clearInteractiveScreen,
+  enterInteractiveScreen,
+} from "./screen.js";
 export { shouldUseColor } from "./theme.js";
 export { GHOST_ASCII, GHOST_ENGINEER_VERSION, renderWelcomeText } from "./welcome.js";
 export { WorkbenchApp } from "./components/WorkbenchApp.js";
@@ -63,23 +73,26 @@ export function runWorkbench(options: RunWorkbenchOptions = {}): void {
     return;
   }
 
-  render(
-    <WorkbenchContainer services={services} colorEnabled={colorEnabled} />,
-    {
-      stdin,
-      stdout,
-      stderr: options.stderr ?? process.stderr,
-      exitOnCtrlC: true,
-    },
+  const restoreScreen = enterInteractiveScreen(stdout);
+  const instance = render(
+    <WorkbenchContainer
+      services={services}
+      colorEnabled={colorEnabled}
+      clearScreen={() => clearInteractiveScreen(stdout)}
+    />,
+    { stdin, stdout, stderr: options.stderr ?? process.stderr, exitOnCtrlC: true },
   );
+  void instance.waitUntilExit().then(restoreScreen, restoreScreen);
 }
 
 function WorkbenchContainer({
   services,
   colorEnabled,
+  clearScreen,
 }: {
   services: WorkbenchServices;
   colorEnabled: boolean;
+  clearScreen: () => void;
 }) {
   const [snapshot, setSnapshot] = useState(() => safeLoadSnapshot(services));
   const refresh = useCallback(() => setSnapshot(safeLoadSnapshot(services)), [services]);
@@ -91,6 +104,7 @@ function WorkbenchContainer({
       snapshot={snapshot}
       refresh={refresh}
       colorEnabled={colorEnabled}
+      clearScreen={clearScreen}
     />
   );
 }
