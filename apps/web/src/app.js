@@ -4,6 +4,32 @@ const toast = document.querySelector("#toast");
 const tabs = [...document.querySelectorAll(".tab")];
 const panels = [...document.querySelectorAll(".command-set")];
 
+// Centralized public install command for the web UI
+const PUBLIC_INSTALL_CMD = "curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash";
+
+function setInstallCommand() {
+  for (const el of document.querySelectorAll("[data-copy]")) {
+    const v = el.getAttribute("data-copy") ?? "";
+    if (v.includes("ghost-engineer.dev")) {
+      el.setAttribute("data-copy", PUBLIC_INSTALL_CMD);
+    }
+  }
+
+  const replaceInId = ["hero-command", "global-command", "source-command"];
+  for (const id of replaceInId) {
+    const node = document.getElementById(id);
+    if (node && node.textContent.includes("ghost-engineer.dev")) {
+      node.textContent = node.textContent.replace(/https?:\/\/ghost-engineer\.dev\/install\.sh \| bash/g, PUBLIC_INSTALL_CMD);
+    }
+  }
+
+  for (const pre of document.querySelectorAll("pre code")) {
+    if (pre.textContent.includes("ghost-engineer.dev")) {
+      pre.textContent = pre.textContent.replace(/https?:\/\/ghost-engineer\.dev\/install\.sh \| bash/g, PUBLIC_INSTALL_CMD);
+    }
+  }
+}
+
 const platform = detectPlatform();
 platformValue.textContent = platform.label;
 shellValue.textContent = platform.shell;
@@ -19,6 +45,9 @@ for (const tab of tabs) {
     }
   });
 }
+
+// Ensure install command is centralized in the UI before wiring listeners
+setInstallCommand();
 
 for (const button of document.querySelectorAll("[data-copy]")) {
   button.addEventListener("click", async () => {

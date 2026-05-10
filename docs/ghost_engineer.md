@@ -82,7 +82,7 @@ The installer:
 Example installation:
 
 ```bash
-curl -fsSL https://ghost-engineer.dev/install.sh | bash
+curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash
 ```
 
 For local source installation:

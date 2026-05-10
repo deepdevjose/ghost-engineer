@@ -9,7 +9,7 @@ Deterministic local analysis works without Bob. The complete Ghost Engineer work
 Ghost Engineer 0.1 is installed from source because npm package publishing is intentionally deferred.
 
 ```bash
-curl -fsSL https://ghost-engineer.dev/install.sh | bash
+curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash
 ```
 
 The installer clones or updates the repository at `${HOME}/.ghost-engineer/source`, runs `npm ci`, builds the monorepo, and links the CLI globally with `npm link` from `apps/cli`.
