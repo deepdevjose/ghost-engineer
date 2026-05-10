@@ -23,12 +23,15 @@ for (const tab of tabs) {
 for (const button of document.querySelectorAll("[data-copy]")) {
   button.addEventListener("click", async () => {
     const value = button.getAttribute("data-copy") ?? "";
-    try {
-      await navigator.clipboard.writeText(value);
-      showToast("Command copied");
-    } catch {
-      showToast(value);
-    }
+    await copyValue(value);
+  });
+}
+
+for (const button of document.querySelectorAll("[data-copy-target]")) {
+  button.addEventListener("click", async () => {
+    const targetId = button.getAttribute("data-copy-target") ?? "";
+    const target = document.getElementById(targetId);
+    await copyValue(target?.textContent?.trim() ?? "");
   });
 }
 
@@ -57,4 +60,17 @@ function showToast(message) {
   window.setTimeout(() => {
     toast.classList.remove("visible");
   }, 1800);
+}
+
+async function copyValue(value) {
+  if (!value) {
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(value);
+    showToast("Command copied");
+  } catch {
+    showToast(value);
+  }
 }

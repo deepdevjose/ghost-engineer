@@ -12,7 +12,7 @@
   <body>
     <header class="topbar">
       <a class="brand" href="#installer" aria-label="Ghost Engineer installer">
-        <span class="brand-mark">GE</span>
+        <img src="./assets/bobghost.png" alt="" aria-hidden="true">
         <span>Ghost Engineer</span>
       </a>
       <nav aria-label="Primary navigation">
@@ -23,24 +23,57 @@
     </header>
 
     <main>
-      <section class="installer" id="installer">
-        <div class="installer-copy">
-          <p class="eyebrow">IBM Bob powered CLI</p>
-          <h1>Install Ghost Engineer and recover repository intelligence.</h1>
-          <p class="summary">Detect your environment, link the source-built CLI globally, verify Bob when available, and generate the local `.ghost/` workspace from one guided screen.</p>
+      <section class="hero" id="installer">
+        <div class="hero-copy">
+          <p class="eyebrow">Powered by IBM Bob</p>
+          <h1>Ghost Engineer</h1>
+          <p class="tagline">Recover software intelligence. Evolve systems with confidence.</p>
+          <p class="summary">A Unix-first CLI that reconstructs repository intelligence locally, writes a `.ghost/` workspace, and sends structured context to Bob when you ask for AI reasoning.</p>
           <div class="actions" aria-label="Primary install actions">
-            <button class="primary" data-copy="curl -fsSL https://ghost-engineer.dev/install.sh | bash">Copy curl install</button>
+            <button class="primary" data-copy="curl -fsSL https://ghost-engineer.dev/install.sh | bash" type="button">Copy install command</button>
             <a class="secondary" href="./install.sh" download>Download install.sh</a>
           </div>
         </div>
-        <div class="installer-visual" aria-label="Ghost Engineer console output preview">
-          <img src="./assets/console-preview.svg" alt="Ghost Engineer CLI analysis preview">
+
+        <div class="hero-panel" aria-label="Ghost Engineer install panel">
+          <div class="ghost-mark">
+            <img src="./assets/bobghost.png" alt="Ghost Engineer icon">
+          </div>
+          <div class="powered">
+            <span>IBM</span>
+            <span>Bob</span>
+          </div>
+          <div class="terminal">
+            <div class="terminal-header">
+              <span>quickstart.sh</span>
+              <button data-copy-target="hero-command" type="button">Copy</button>
+            </div>
+            <pre><code id="hero-command">curl -fsSL https://ghost-engineer.dev/install.sh | bash
+ghost analyze .
+ghost explain
+ghost analyze . --bob</code></pre>
+          </div>
+          <div class="signal-grid" aria-label="Release signals">
+            <div>
+              <strong>0.1</strong>
+              <span>Release</span>
+            </div>
+            <div>
+              <strong>Local</strong>
+              <span>Core scan</span>
+            </div>
+            <div>
+              <strong>Bob</strong>
+              <span>Reasoning</span>
+            </div>
+          </div>
         </div>
       </section>
 
       <section class="workbench" aria-label="Installer workbench">
         <div class="status-panel">
-          <h2>Detected System</h2>
+          <p class="section-kicker">Environment</p>
+          <h2>System check</h2>
           <dl>
             <div>
               <dt>Platform</dt>
@@ -59,7 +92,10 @@
 
         <div class="command-panel" id="commands">
           <div class="panel-heading">
-            <h2>Install Commands</h2>
+            <div>
+              <p class="section-kicker">Install path</p>
+              <h2>Commands</h2>
+            </div>
             <div class="tabs" role="tablist" aria-label="Install mode">
               <button class="tab active" data-tab="global" type="button">Global</button>
               <button class="tab" data-tab="source" type="button">Source</button>
@@ -67,14 +103,22 @@
           </div>
 
           <div class="command-set active" data-panel="global">
-            <pre><code>curl -fsSL https://ghost-engineer.dev/install.sh | bash
+            <div class="command-toolbar">
+              <span>cloudflare-ready source installer</span>
+              <button data-copy-target="global-command" type="button">Copy</button>
+            </div>
+            <pre><code id="global-command">curl -fsSL https://ghost-engineer.dev/install.sh | bash
 ghost analyze .
 ghost explain
 ghost analyze . --bob</code></pre>
           </div>
 
           <div class="command-set" data-panel="source">
-            <pre><code>git clone https://github.com/deepdevjose/ghost-engineer.git
+            <div class="command-toolbar">
+              <span>local source checkout</span>
+              <button data-copy-target="source-command" type="button">Copy</button>
+            </div>
+            <pre><code id="source-command">git clone https://github.com/deepdevjose/ghost-engineer.git
 cd ghost-engineer
 npm install
 npm run build
@@ -87,20 +131,23 @@ ghost analyze .</code></pre>
       </section>
 
       <section class="artifacts" id="artifacts">
-        <div>
-          <p class="eyebrow">Local workspace</p>
+        <div class="section-heading">
+          <p class="section-kicker">Local workspace</p>
           <h2>Generated `.ghost/` artifacts</h2>
         </div>
         <div class="artifact-grid">
           <article>
+            <span>01</span>
             <h3>Architecture</h3>
             <p>`architecture.json`, `dependency-map.json`, and `project-summary.md` capture structure, scripts, packages, and entry points.</p>
           </article>
           <article>
+            <span>02</span>
             <h3>Bob Reasoning</h3>
             <p>`bob/*-prompt.md` and `bob/*-response.md` preserve the exact context sent to IBM Bob.</p>
           </article>
           <article>
+            <span>03</span>
             <h3>Reports</h3>
             <p>`docs/`, `patches/`, and `reports/` keep onboarding, initial analysis, test, patch, and release notes together.</p>
           </article>
