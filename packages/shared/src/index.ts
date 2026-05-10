@@ -104,6 +104,31 @@ export interface GhostBobStatus {
 export interface GhostBobSetupOptions {
   command?: string;
   install?: boolean;
+  env?: Record<string, string | undefined>;
+  homeDirectory?: string;
+  onProgress?: (message: string) => void;
+}
+
+export type GhostNpmGlobalStatusKind =
+  | "npm-missing"
+  | "prefix-writable"
+  | "prefix-not-writable"
+  | "fallback-user-prefix-available";
+
+export interface GhostNpmGlobalStatus {
+  status: GhostNpmGlobalStatusKind;
+  npmCommand: string;
+  npmPath?: string;
+  prefix?: string;
+  prefixWritable: boolean;
+  binDirectory?: string;
+  binDirectoryOnPath: boolean;
+  userPrefix: string;
+  userBinDirectory: string;
+  userBinDirectoryOnPath: boolean;
+  fallbackUserPrefixAvailable: boolean;
+  error?: string;
+  statusText: string;
 }
 
 export interface GhostBobRunResult {

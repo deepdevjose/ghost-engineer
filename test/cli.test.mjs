@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { get } from "node:http";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
@@ -7,6 +14,7 @@ import { join } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { once } from "node:events";
 import { test } from "node:test";
+import { TerminalFormatter } from "../apps/cli/dist/terminal.js";
 
 const cliPath = new URL("../apps/cli/dist/index.js", import.meta.url);
 
@@ -18,12 +26,19 @@ test("CLI analyze command writes a .ghost workspace", () => {
   });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /Ghost Engineer analyzed cli-fixture/);
-  assert.match(result.stdout, /IBM Bob not detected/);
+  assert.match(result.stdout, /✓ Ghost Engineer analyzed cli-fixture/);
+  assert.match(result.stdout, /Repository/);
+  assert.match(result.stdout, /Artifacts/);
+  assert.match(result.stdout, /! IBM Bob not detected/);
   assert.match(result.stdout, /ghost setup bob/);
+  assert.doesNotMatch(result.stdout, /\u001b\[/);
   assert.ok(existsSync(join(root, ".ghost", "architecture.json")));
   assert.ok(existsSync(join(root, ".ghost", "project-summary.md")));
   assert.ok(existsSync(join(root, ".ghost", "reports", "initial-analysis.md")));
+  assert.doesNotMatch(
+    readFileSync(join(root, ".ghost", "project-summary.md"), "utf8"),
+    /\u001b\[|✓|! IBM Bob not detected/,
+  );
 });
 
 test("CLI setup bob guides missing Bob installation", () => {
@@ -32,7 +47,8 @@ test("CLI setup bob guides missing Bob installation", () => {
   const result = runCli(["setup", "bob", "--bob-command", join(root, "missing-bob")], root);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /IBM Bob was not found/);
+  assert.match(result.stdout, /Bob setup/);
+  assert.match(result.stdout, /! IBM Bob was not found/);
   assert.match(result.stdout, /repository-wide reasoning/);
   assert.match(result.stdout, /curl -fsSL https:\/\/bob\.ibm\.com\/download\/bobshell\.sh \| bash/);
   assert.match(result.stdout, /ghost setup bob --install/);
@@ -47,7 +63,7 @@ test("CLI setup bob reports detected Bob-compatible command", () => {
   const result = runCli(["setup", "bob", "--bob-command", fakeBob], root);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /IBM Bob detected/);
+  assert.match(result.stdout, /✓ IBM Bob detected/);
   assert.match(result.stdout, /ghost analyze \. --bob/);
 });
 
@@ -107,8 +123,40 @@ test("CLI analyze --bob fails clearly when Bob is unavailable", () => {
 
   assert.equal(result.status, 1);
   assert.match(result.stderr, /IBM Bob is required/);
+  assert.match(result.stderr, /✗ Bob setup required/);
   assert.match(result.stderr, /ghost setup bob/);
   assert.ok(existsSync(join(root, ".ghost", "architecture.json")));
+});
+
+test("CLI supports --no-color and terminal formatter respects color controls", () => {
+  const root = createFixtureRepository("ghost-cli-no-color-");
+  const result = runCli(
+    ["--no-color", "setup", "bob", "--bob-command", join(root, "missing-bob")],
+    root,
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /! IBM Bob was not found/);
+  assert.doesNotMatch(result.stdout, /\u001b\[/);
+
+  const plain = new TerminalFormatter({ color: false });
+  assert.equal(plain.success("Done"), "✓ Done");
+
+  const colored = new TerminalFormatter({ color: true });
+  assert.match(colored.command("ghost analyze ."), /\u001b\[36mghost analyze \.\u001b\[39m/);
+
+  const previousNoColor = process.env.NO_COLOR;
+  process.env.NO_COLOR = "1";
+  try {
+    const noColor = new TerminalFormatter({ stream: { isTTY: true } });
+    assert.equal(noColor.colorEnabled, false);
+  } finally {
+    if (previousNoColor === undefined) {
+      delete process.env.NO_COLOR;
+    } else {
+      process.env.NO_COLOR = previousNoColor;
+    }
+  }
 });
 
 test("CLI serve exposes the generated dashboard", async () => {

@@ -19,6 +19,7 @@ import {
   setupBob,
 } from "@ghost-engineer/core";
 import type { GhostBobOptions, GhostBobTask } from "@ghost-engineer/shared";
+import { TerminalFormatter } from "./terminal.js";
 
 interface BobCliOptions {
   bob?: boolean;
@@ -40,6 +41,7 @@ program
   .name("ghost")
   .description("Ghost Engineer command-line interface")
   .version("0.1.0")
+  .option("--no-color", "Disable colored terminal output")
   .showHelpAfterError()
   .addHelpText(
     "after",
@@ -51,7 +53,9 @@ program
   .argument("[path]", "Path to the project", ".")
   .description("Initialize a .ghost workspace with a baseline analysis")
   .action((path: string) =>
-    run(() => withBobActivationHint(initializeGhost(resolve(path)), {})),
+    run(() => withBobActivationHint(initializeGhost(resolve(path)), {}), {
+      analysis: true,
+    }),
   );
 
 const analyze = program
@@ -68,6 +72,7 @@ analyze.action((path: string, options: BobCliOptions) =>
       ).summary,
       options,
     ),
+    { analysis: true },
   ),
 );
 
@@ -165,6 +170,11 @@ setup
       setupBob({
         command: options.bobCommand,
         install: options.install,
+        onProgress: options.install
+          ? (message) => {
+              console.log(createTerminal(process.stdout).renderOutput(message));
+            }
+          : undefined,
       }),
     ),
   );
@@ -212,17 +222,31 @@ program
 
 program.parse();
 
-function run(action: () => string): void {
+function run(action: () => string, renderOptions: { analysis?: boolean } = {}): void {
   try {
     const output = action();
     if (output) {
-      console.log(output);
+      const terminal = createTerminal(process.stdout);
+      console.log(
+        renderOptions.analysis
+          ? terminal.renderAnalysisSummary(output)
+          : terminal.renderOutput(output),
+      );
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`ghost: ${message}`);
+    const terminal = createTerminal(process.stderr);
+    console.error(terminal.renderError(`ghost: ${message}`));
     process.exitCode = 1;
   }
+}
+
+function createTerminal(stream: NodeJS.WriteStream): TerminalFormatter {
+  const options = program.opts<{ color?: boolean }>();
+  return new TerminalFormatter({
+    color: options.color === false ? false : undefined,
+    stream,
+  });
 }
 
 function addBobOptions(command: Command): void {

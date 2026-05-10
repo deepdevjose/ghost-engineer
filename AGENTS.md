@@ -19,7 +19,9 @@ Ghost Engineer is an npm-workspaces monorepo. Use `npm`, not pnpm or yarn, unles
 - Keep Bob setup/status logic separate from Bob execution.
 - Present Bob as central to the complete Ghost Engineer workflow, while preserving local-first deterministic analysis.
 - Do not imply IBM Bob is bundled with Ghost Engineer, permanently free, or exempt from IBM authentication, usage limits, trials, plans, or licenses.
+- Keep `ghost setup bob --install` on the official IBM installer command, but avoid `sudo` and prefer process-local `npm_config_prefix=$HOME/.local` when the active npm global prefix is not user-writable.
 - Keep CLI, web, README, and `docs/ghost_engineer.md` consistent when changing Bob setup or workflow copy.
+- Use the terminal formatter in `apps/cli/src/terminal.ts` for CLI presentation. Do not scatter raw ANSI escape codes through command handlers, and keep generated `.ghost/` artifacts free of terminal styling.
 - Preserve prompt and response artifacts under `.ghost/bob/` for every Bob-backed path.
 - Treat `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, `.ghost/bob-analysis.md`, `.ghost/docs/onboarding.md`, `.ghost/reports/initial-analysis.md`, `.ghost/reports/final-report.md`, and `.ghost/dashboard/index.html` as the baseline workspace contract.
 - Do not commit generated `.ghost/`, `dist/`, `node_modules/`, coverage, or local environment files.

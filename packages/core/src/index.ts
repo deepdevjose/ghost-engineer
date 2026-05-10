@@ -36,6 +36,11 @@ export {
   formatBobSetupGuide,
   setupBob,
 } from "./bob-status.js";
+export {
+  createUserPrefixEnvironment,
+  detectNpmGlobalStatus,
+  formatPathSetupInstructions,
+} from "./npm-global.js";
 
 export function initializeGhost(rootPath: string): string {
   return analyzeRepository(rootPath).summary;

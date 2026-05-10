@@ -56,6 +56,14 @@ Ghost does not install external software silently. If you want Ghost to run the 
 ghost setup bob --install
 ```
 
+Before running the official Bob installer, Ghost checks `npm prefix -g`. If the configured global npm prefix is not writable, for example `/usr/local` on a clean Fedora system, Ghost runs the official installer with a process-local user prefix:
+
+```bash
+npm_config_prefix=$HOME/.local PATH=$HOME/.local/bin:$PATH curl -fsSL https://bob.ibm.com/download/bobshell.sh | bash
+```
+
+This avoids `sudo` and does not permanently rewrite npm configuration. If `~/.local/bin` is not on PATH, Ghost prints shell-specific instructions to add it.
+
 Bob Shell requires Node.js 22.15.0 or later. Ghost Engineer aligns to the same baseline for the complete workflow. Interactive Bob Shell sessions use IBMid authentication by default, so after installation run:
 
 ```bash
@@ -127,6 +135,12 @@ Useful Bob options:
 --bob-accept-license
 ```
 
+Ghost uses restrained terminal formatting for command output. Colors are disabled automatically when output is redirected, when `NO_COLOR` is set, or when you pass:
+
+```bash
+ghost --no-color analyze .
+```
+
 ## Generated Workspace
 
 `ghost analyze .` writes deterministic artifacts first. Bob-backed commands add prompt and response artifacts under `.ghost/bob/`.
@@ -193,8 +207,10 @@ npm run dev -w @ghost-engineer/cli -- analyze .
 Implemented in 0.1:
 
 - Static web installer with platform hints, Ghost install commands, Bob setup guidance, and downloadable `install.sh`
-- Source-backed global CLI install through `npm link`
+- Source-backed user-local CLI launcher at `~/.local/bin/ghost`
 - `ghost setup bob` for Bob Shell detection, Node.js requirement checks, installer guidance, and IBMid sign-in next steps
+- `ghost setup bob --install` runs the official Bob Shell installer with a user-owned npm prefix when the default global prefix is not writable
+- Scannable CLI output with color-aware sections, success/warning/error markers, `NO_COLOR`, and `--no-color`
 - Repository scanning with ignored build, dependency, cache, vendor, and `.ghost/` directories
 - Language, framework, package manifest, script, entry point, dependency, and risk detection
 - File-level explanation using imports, exports, declarations, and notes

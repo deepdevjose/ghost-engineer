@@ -126,6 +126,14 @@ Ghost Engineer does not install external software silently. Users can explicitly
 ghost setup bob --install
 ```
 
+Before executing the official installer, Ghost checks `npm prefix -g`. If the configured npm global prefix is not writable by the current user, Ghost keeps the IBM installer command but runs it with a process-local user-owned npm environment:
+
+```bash
+npm_config_prefix=$HOME/.local PATH=$HOME/.local/bin:$PATH curl -fsSL https://bob.ibm.com/download/bobshell.sh | bash
+```
+
+This avoids `sudo`, does not permanently rewrite npm configuration by default, and lets Ghost print shell-specific PATH guidance when `~/.local/bin` is not available from the current shell.
+
 Bob Shell requires Node.js 22.15.0 or later, and Ghost Engineer aligns to the same runtime baseline for the complete workflow. Interactive Bob Shell sessions use IBMid authentication by default. IBM Bob is a separate IBM product and is not bundled with Ghost Engineer.
 
 ### 2. Ghost CLI (Core Platform)
@@ -341,6 +349,7 @@ The first release is a CLI-first product that proves the workflow end to end and
 - `apps/web` provides the web installer with platform hints, install commands, source setup commands, and a downloadable `install.sh`.
 - `ghost analyze .` scans a repository and writes `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, `.ghost/bob-analysis.md`, onboarding docs, `.ghost/reports/initial-analysis.md`, a final report, and a dashboard page. If Bob is missing, it completes local work and points the user to `ghost setup bob`.
 - `ghost setup bob` checks Bob Shell availability, checks Node.js against Bob Shell's 22.15.0 minimum requirement, shows the official IBM Bob Shell installer command, explains IBMid sign-in, and makes clear that IBM Bob is a separate IBM product.
+- `ghost setup bob --install` runs the official IBM Bob Shell installer only when explicitly requested, and uses a temporary user-owned npm prefix when the default global prefix would fail with permissions errors.
 - `ghost analyze . --bob` sends the structured repository context to IBM Bob and writes prompt/response artifacts under `.ghost/bob/`.
 - `ghost explain` summarizes the detected repository architecture.
 - `ghost explain <file>` summarizes imports, exports, declarations, and basic file-level notes.
@@ -352,6 +361,7 @@ The first release is a CLI-first product that proves the workflow end to end and
 - `ghost report` regenerates the final report.
 - `ghost bob --task architecture` runs Bob directly against Ghost's repository intelligence context.
 - `ghost serve` serves the local dashboard from `.ghost/dashboard`.
+- CLI output uses restrained terminal hierarchy, success/warning/error markers, color when interactive, and plain readable output when `NO_COLOR`, `--no-color`, or redirected streams disable color.
 - `npm test` runs real `node:test` coverage across the CLI, analyzer, artifact writer, core orchestration, Bob adapter path, and shared package entry.
 - GitHub Actions runs install, build, and test checks.
 
