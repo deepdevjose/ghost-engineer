@@ -18,7 +18,9 @@ test("web installer build emits static entry files", () => {
   assert.ok(existsSync(join(root, "app.js")));
   assert.ok(existsSync(join(root, "install.sh")));
   assert.ok(existsSync(join(root, "assets", "console-preview.svg")));
+  assert.ok(existsSync(join(root, "assets", "bobghost.png")));
   assert.match(html, /Ghost Engineer Installer/);
+  assert.match(html, /rel="icon" type="image\/png" href="\.\/assets\/bobghost\.png"/);
   assert.match(html, /analyze \. --bob/);
   assert.match(html, /npm link/);
 });
