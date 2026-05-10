@@ -23,7 +23,8 @@ test("web installer build emits static entry files", () => {
   assert.match(html, /Ghost Engineer Installer/);
   assert.match(html, /rel="icon" type="image\/png" href="\.\/assets\/bobghost\.png"/);
   assert.match(html, /Understand any repository before you change it/);
-  assert.match(html, /Install Ghost\. Connect Bob/);
+  assert.match(html, /Open the Workbench\. Connect Bob/);
+  assert.match(html, /terminal workbench/);
   assert.match(html, /ghost setup bob/);
   assert.match(html, /Node\.js 22\.15\.0\+/);
   assert.match(html, /https:\/\/bob\.ibm\.com\/download\/bobshell\.sh/);
@@ -32,7 +33,8 @@ test("web installer build emits static entry files", () => {
   assert.match(html, /Reason with Bob/);
   assert.match(html, /\.ghost\/architecture\.json/);
   assert.match(html, /analyze \. --bob/);
-  assert.match(html, /npm link/);
+  assert.match(html, /ghost/);
+  assert.doesNotMatch(html, /npm link/);
 });
 
 test("web installer script is publish-ready shell", () => {

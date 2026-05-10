@@ -14,6 +14,7 @@
   "dependencies": {
     "@ghost-engineer/core": "^0.1.0",
     "@ghost-engineer/shared": "^0.1.0",
+    "@ghost-engineer/tui": "^0.1.0",
     "commander": "^14.0.3"
   }
 }

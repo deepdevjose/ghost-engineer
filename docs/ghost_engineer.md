@@ -9,7 +9,8 @@ Ghost Engineer is a Unix-first, AI-native developer platform that helps engineer
 
 The platform combines:
 
-- a CLI-first workflow
+- an interactive terminal workbench for human repository exploration
+- command-mode CLI workflows for automation and scripting
 - repository-wide AI reasoning
 - architectural reconstruction
 - contextual code understanding
@@ -136,18 +137,25 @@ This avoids `sudo`, does not permanently rewrite npm configuration by default, a
 
 Bob Shell requires Node.js 22.15.0 or later, and Ghost Engineer aligns to the same runtime baseline for the complete workflow. Interactive Bob Shell sessions use IBMid authentication by default. IBM Bob is a separate IBM product and is not bundled with Ghost Engineer.
 
-### 2. Ghost CLI (Core Platform)
+### 2. Ghost Workbench TUI (Primary Human Surface)
 
-The CLI is the main product experience.
+The terminal workbench is the main human product experience.
 
 Developers enter a repository and execute:
 
 ```bash
 cd Vision-Language-Runtime
-ghost analyze .
+ghost
 ```
 
-Ghost Engineer then:
+Ghost Engineer opens a full-screen terminal workbench with:
+
+- top status bar
+- left navigation sidebar
+- overview, analyze, Bob setup, artifacts, reports, and activity views
+- bottom key-hint bar
+
+The Workbench then:
 
 - scans the repository
 - indexes the project
@@ -158,7 +166,20 @@ Ghost Engineer then:
 - guides Bob setup when Bob is missing
 - uses IBM Bob for repository-wide reasoning in the complete workflow
 
+Command mode remains available for automation:
+
+```bash
+ghost analyze .
+ghost report . --bob
+```
+
 ## Example Commands
+
+### Launch Workbench
+
+```bash
+ghost
+```
 
 ### Analyze Repository
 
@@ -310,7 +331,7 @@ Richer architecture graphs, dependency-map visualization, and Bob reasoning view
 | macOS | Primary support |
 | Windows | Planned / WSL2 |
 
-Ghost Engineer is optimized for Unix-based engineering environments due to its CLI-first workflow and systems-engineering focus.
+Ghost Engineer is optimized for Unix-based engineering environments due to its terminal workbench, command-mode automation, and systems-engineering focus.
 
 ## Example Use Case
 
@@ -342,11 +363,14 @@ Recover software intelligence. Evolve systems with confidence.
 
 ## Release Delivery Cut
 
-The first release is a CLI-first product that proves the workflow end to end and integrates with the installed IBM Bob CLI.
+The first release is a terminal-workbench-first product that proves the workflow end to end and integrates with the installed IBM Bob CLI. Explicit commands remain available for automation.
 
 ### Release 0.1
 
 - `apps/web` provides the web installer with platform hints, install commands, source setup commands, and a downloadable `install.sh`.
+- `ghost` with no arguments opens the interactive Ghost Engineer Workbench TUI.
+- `packages/tui` owns the Ink/React terminal workbench, navigation state, views, activity log, artifact tree, and action mapping to `@ghost-engineer/core`.
+- Command mode remains available for automation through the existing explicit commands.
 - `ghost analyze .` scans a repository and writes `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, `.ghost/bob-analysis.md`, onboarding docs, `.ghost/reports/initial-analysis.md`, a final report, and a dashboard page. If Bob is missing, it completes local work and points the user to `ghost setup bob`.
 - `ghost setup bob` checks Bob Shell availability, checks Node.js against Bob Shell's 22.15.0 minimum requirement, shows the official IBM Bob Shell installer command, explains IBMid sign-in, and makes clear that IBM Bob is a separate IBM product.
 - `ghost setup bob --install` runs the official IBM Bob Shell installer only when explicitly requested, and uses a temporary user-owned npm prefix when the default global prefix would fail with permissions errors.

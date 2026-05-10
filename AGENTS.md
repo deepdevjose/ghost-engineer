@@ -6,6 +6,7 @@ Ghost Engineer is an npm-workspaces monorepo. Use `npm`, not pnpm or yarn, unles
 
 - `apps/cli` contains the `ghost` command built with Commander.
 - `apps/web` contains the static installer and downloadable `install.sh`.
+- `packages/tui` owns the Ink/React terminal workbench launched by `ghost` with no arguments.
 - `packages/analyzers` owns deterministic repository scanning and file inspection.
 - `packages/artifact-writer` owns `.ghost/` artifact rendering.
 - `packages/core` orchestrates commands, isolates IBM Bob execution in `src/bob.ts`, and keeps Bob availability/setup detection in `src/bob-status.ts`.
@@ -15,6 +16,8 @@ Ghost Engineer is an npm-workspaces monorepo. Use `npm`, not pnpm or yarn, unles
 ## Working Rules
 
 - Keep deterministic analysis usable without IBM Bob.
+- Preserve `ghost` with no arguments as the primary human-facing Workbench TUI; preserve explicit command mode for automation.
+- Keep TUI services mapped to `@ghost-engineer/core`; do not duplicate analyzer, artifact, Bob setup, or command orchestration logic inside presentation components.
 - Keep Bob behind the adapter boundary in `packages/core/src/bob.ts`.
 - Keep Bob setup/status logic separate from Bob execution.
 - Present Bob as central to the complete Ghost Engineer workflow, while preserving local-first deterministic analysis.

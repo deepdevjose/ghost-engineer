@@ -18,6 +18,41 @@ import { TerminalFormatter } from "../apps/cli/dist/terminal.js";
 
 const cliPath = new URL("../apps/cli/dist/index.js", import.meta.url);
 
+test("CLI with no args launches the workbench path", () => {
+  const root = createFixtureRepository("ghost-cli-workbench-");
+
+  const result = runCli([], root, {
+    GHOST_BOB_COMMAND: join(root, "missing-bob"),
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Ghost Engineer Workbench/);
+  assert.match(result.stdout, /Navigation/);
+  assert.match(result.stdout, /Overview/);
+  assert.doesNotMatch(result.stdout, /Usage: ghost/);
+
+  const noColor = runCli(["--no-color"], root, {
+    GHOST_BOB_COMMAND: join(root, "missing-bob"),
+  });
+  assert.equal(noColor.status, 0, noColor.stderr);
+  assert.match(noColor.stdout, /Ghost Engineer Workbench/);
+  assert.doesNotMatch(noColor.stdout, /\u001b\[/);
+});
+
+test("CLI help still renders Commander help", () => {
+  const root = createFixtureRepository("ghost-cli-help-");
+
+  const help = runCli(["--help"], root);
+  assert.equal(help.status, 0, help.stderr);
+  assert.match(help.stdout, /Usage: ghost/);
+  assert.match(help.stdout, /Commands:/);
+  assert.doesNotMatch(help.stdout, /Ghost Engineer Workbench/);
+
+  const helpCommand = runCli(["help"], root);
+  assert.equal(helpCommand.status, 0, helpCommand.stderr);
+  assert.match(helpCommand.stdout, /Usage: ghost/);
+});
+
 test("CLI analyze command writes a .ghost workspace", () => {
   const root = createFixtureRepository("ghost-cli-");
 

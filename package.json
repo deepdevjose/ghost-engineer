@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w packages/shared && npm run build -w packages/analyzers && npm run build -w packages/artifact-writer && npm run build -w packages/core && npm run build -w apps/cli && npm run build -w apps/web",
+    "build": "npm run build -w packages/shared && npm run build -w packages/analyzers && npm run build -w packages/artifact-writer && npm run build -w packages/core && npm run build -w packages/tui && npm run build -w apps/cli && npm run build -w apps/web",
     "test": "npm run build && npm run test --workspaces",
     "lint": "npm run build"
   },

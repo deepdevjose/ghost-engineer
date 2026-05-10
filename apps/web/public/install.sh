@@ -231,11 +231,11 @@ npm run build
 launcher="$(create_ghost_launcher)"
 
 if command -v ghost >/dev/null 2>&1; then
-  echo "Ghost CLI installed: $(command -v ghost)"
+  echo "Ghost Engineer installed: $(command -v ghost)"
   ghost --version
 else
   ensure_local_bin_on_path
-  echo "Ghost CLI created at: ${launcher}"
+  echo "Ghost Engineer launcher created at: ${launcher}"
   echo "After adding ~/.local/bin to PATH and reloading your shell, run:"
   echo "  ghost --version"
 fi
@@ -249,5 +249,6 @@ else
 fi
 
 echo "Ghost Engineer installed."
-echo "Open any repository and run: ghost analyze ."
+echo "Open any repository and run: ghost"
+echo "Command mode remains available: ghost analyze ."
 echo "For Bob-powered reasoning, run: ghost analyze . --bob"

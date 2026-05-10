@@ -1,6 +1,6 @@
 # Ghost Engineer
 
-Ghost Engineer is a Unix-first repository intelligence CLI powered by IBM Bob. It reconstructs repository context locally, writes a `.ghost/` workspace, and then hands that structured intelligence to IBM Bob for codebase-wide reasoning, documentation, test planning, refactor guidance, and engineering reports.
+Ghost Engineer is a Unix-first repository intelligence workbench powered by IBM Bob. Running `ghost` opens an interactive terminal workbench for humans; command mode remains available for automation and scripts. Ghost reconstructs repository context locally, writes a `.ghost/` workspace, and then hands that structured intelligence to IBM Bob for codebase-wide reasoning, documentation, test planning, refactor guidance, and engineering reports.
 
 Deterministic local analysis works without Bob. The complete Ghost Engineer workflow is Bob-powered.
 
@@ -24,10 +24,11 @@ cd ghost-engineer
 npm install
 npm run build
 mkdir -p ~/.local/bin
-cat > ~/.local/bin/ghost <<'EOF'
+INSTALL_DIR="$(pwd)"
+cat > ~/.local/bin/ghost <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-exec node "$(pwd)/apps/cli/dist/index.js" "$@"
+exec node "$INSTALL_DIR/apps/cli/dist/index.js" "\$@"
 EOF
 chmod +x ~/.local/bin/ghost
 export PATH="$HOME/.local/bin:$PATH"
@@ -80,10 +81,18 @@ Once linked, `ghost` is available from your shell. After restarting your machine
 
 ```bash
 cd any-repository
+ghost
+```
+
+The interactive workbench shows repository state, `.ghost/` workspace status, IBM Bob status, recommended next actions, activity, and generated artifacts. Use the sidebar to run local analysis, open Bob setup, generate docs/tests/reports, and inspect the `.ghost/` tree.
+
+Command mode still exists for automation:
+
+```bash
 ghost analyze .
 ```
 
-If Bob is not installed yet, Ghost still writes local context and prints the next step:
+If Bob is not installed yet, command mode still writes local context and prints the next step:
 
 ```text
 IBM Bob not detected. Local context is ready. Run `ghost setup bob` to unlock Bob-powered reasoning.
@@ -98,7 +107,9 @@ ghost explain --bob
 ghost report . --bob
 ```
 
-## Commands
+## Command Mode
+
+Use `ghost` with no arguments for the TUI workbench. Use explicit commands for scripts, CI, demos, or repeatable automation.
 
 Local deterministic commands:
 
@@ -169,8 +180,8 @@ ghost --no-color analyze .
 ## Recommended Hackathon Demo
 
 ```bash
-ghost analyze .
-ghost setup bob
+ghost
+# open the Workbench, review Overview, Analyze, Bob, Artifacts, and Activity
 ghost analyze . --bob
 ghost explain packages/core/src/bob.ts --bob
 ghost testgen . --bob
@@ -179,7 +190,7 @@ ghost report . --bob
 ghost serve
 ```
 
-This shows the required product story: deterministic recovery first, guided Bob onboarding, and IBM Bob reasoning over Ghost's reconstructed repository intelligence.
+This shows the required product story: the Workbench is the primary human surface, deterministic recovery happens first, Bob onboarding is visible, and IBM Bob reasons over Ghost's reconstructed repository intelligence.
 
 ## Development
 
@@ -199,6 +210,7 @@ npm run preview -w @ghost-engineer/web
 Run the CLI from the workspace without linking:
 
 ```bash
+npm run dev -w @ghost-engineer/cli
 npm run dev -w @ghost-engineer/cli -- analyze .
 ```
 
@@ -208,6 +220,8 @@ Implemented in 0.1:
 
 - Static web installer with platform hints, Ghost install commands, Bob setup guidance, and downloadable `install.sh`
 - Source-backed user-local CLI launcher at `~/.local/bin/ghost`
+- Interactive Ink/React terminal workbench launched by `ghost` with no arguments
+- Command mode for automation through `ghost analyze .`, `ghost report . --bob`, and the existing command suite
 - `ghost setup bob` for Bob Shell detection, Node.js requirement checks, installer guidance, and IBMid sign-in next steps
 - `ghost setup bob --install` runs the official Bob Shell installer with a user-owned npm prefix when the default global prefix is not writable
 - Scannable CLI output with color-aware sections, success/warning/error markers, `NO_COLOR`, and `--no-color`

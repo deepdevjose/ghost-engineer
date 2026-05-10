@@ -19,6 +19,7 @@ import {
   setupBob,
 } from "@ghost-engineer/core";
 import type { GhostBobOptions, GhostBobTask } from "@ghost-engineer/shared";
+import { runWorkbench } from "@ghost-engineer/tui";
 import { TerminalFormatter } from "./terminal.js";
 
 interface BobCliOptions {
@@ -39,7 +40,7 @@ const program = new Command();
 
 program
   .name("ghost")
-  .description("Ghost Engineer command-line interface")
+  .description("Ghost Engineer workbench and command-line interface")
   .version("0.1.0")
   .option("--no-color", "Disable colored terminal output")
   .showHelpAfterError()
@@ -220,7 +221,11 @@ program
     }),
   );
 
-program.parse();
+if (isWorkbenchInvocation(process.argv)) {
+  runWorkbench({ color: workbenchColorOption(process.argv) });
+} else {
+  program.parse();
+}
 
 function run(action: () => string, renderOptions: { analysis?: boolean } = {}): void {
   try {
@@ -247,6 +252,15 @@ function createTerminal(stream: NodeJS.WriteStream): TerminalFormatter {
     color: options.color === false ? false : undefined,
     stream,
   });
+}
+
+function isWorkbenchInvocation(argv: string[]): boolean {
+  const args = argv.slice(2);
+  return args.length === 0 || args.every((arg) => arg === "--no-color");
+}
+
+function workbenchColorOption(argv: string[]): boolean | undefined {
+  return argv.slice(2).includes("--no-color") ? false : undefined;
 }
 
 function addBobOptions(command: Command): void {

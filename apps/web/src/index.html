@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Install and verify Ghost Engineer, the IBM Bob powered repository intelligence CLI.">
+    <meta name="description" content="Install Ghost Engineer, the IBM Bob powered repository intelligence workbench.">
     <title>Ghost Engineer Installer</title>
     <link rel="icon" type="image/png" href="./assets/bobghost.png">
     <link rel="apple-touch-icon" href="./assets/bobghost.png">
@@ -27,7 +27,7 @@
         <div class="hero-copy">
           <p class="eyebrow">Ghost Engineer</p>
           <h1>Understand any repository before you change it.</h1>
-          <p class="summary">A Unix-first CLI that reconstructs full-repository context locally, writes a `.ghost/` workspace, and hands that structured intelligence to IBM Bob for codebase-wide reasoning, documentation, test planning, and safe change guidance.</p>
+          <p class="summary">A Unix-first terminal workbench that reconstructs full-repository context locally, writes a `.ghost/` workspace, and hands that structured intelligence to IBM Bob for codebase-wide reasoning, documentation, test planning, and safe change guidance.</p>
             <div class="actions" aria-label="Primary install actions">
             <button class="primary" data-copy="curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash" type="button">Copy install command</button>
             <a class="secondary" href="./install.sh" download>Download install.sh</a>
@@ -40,7 +40,7 @@
             <img src="./assets/bobghost.png" alt="Ghost Engineer icon">
             <div>
               <p>Complete path</p>
-              <strong>Install Ghost. Connect Bob.</strong>
+              <strong>Open the Workbench. Connect Bob.</strong>
             </div>
           </div>
           <div class="terminal">
@@ -49,6 +49,7 @@
               <button data-copy-target="hero-command" type="button">Copy</button>
             </div>
             <pre><code id="hero-command">curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash
+ghost
 ghost setup bob
 cd any-repository
 ghost analyze . --bob</code></pre>
@@ -90,25 +91,32 @@ Bob reasoning written: .ghost/bob/architecture-response.md</code></pre>
           <article>
             <span>01</span>
             <h3>Install Ghost Engineer</h3>
-            <p>Global CLI, available from any repository.</p>
+            <p>Global workbench and command mode, available from any repository.</p>
             <pre><code>curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash</code></pre>
           </article>
           <article>
             <span>02</span>
+            <h3>Open the Workbench</h3>
+            <p>Use the terminal UI to inspect state, actions, artifacts, and activity.</p>
+            <pre><code>cd any-repository
+ghost</code></pre>
+          </article>
+          <article>
+            <span>03</span>
             <h3>Connect IBM Bob</h3>
             <p>Check Bob Shell, install it if needed, then sign in with IBMid.</p>
             <pre><code>ghost setup bob
 curl -fsSL https://bob.ibm.com/download/bobshell.sh | bash</code></pre>
           </article>
           <article>
-            <span>03</span>
+            <span>04</span>
             <h3>Analyze any repository</h3>
             <p>Ghost reconstructs local context before Bob receives anything.</p>
             <pre><code>cd any-repository
 ghost analyze .</code></pre>
           </article>
           <article>
-            <span>04</span>
+            <span>05</span>
             <h3>Reason with Bob</h3>
             <p>Use Bob over the structured `.ghost/` context for reports, docs, tests, and safe change guidance.</p>
             <pre><code>ghost analyze . --bob
@@ -123,7 +131,7 @@ ghost report . --bob</code></pre>
             <div>
               <p class="section-kicker">Install path</p>
               <h2>Install</h2>
-              <p class="panel-copy">Global installs Ghost for any repository. Then `ghost setup bob` guides Bob Shell installation, Node.js 22.15.0+ requirements, and IBMid sign-in.</p>
+              <p class="panel-copy">Global installs Ghost for any repository. Run `ghost` to open the Workbench, then `ghost setup bob` for Bob Shell installation, Node.js 22.15.0+ requirements, and IBMid sign-in.</p>
             </div>
             <div class="tabs" role="tablist" aria-label="Install mode">
               <button class="tab active" data-tab="global" type="button">Global</button>
@@ -133,10 +141,11 @@ ghost report . --bob</code></pre>
 
           <div class="command-set active" data-panel="global">
             <div class="command-toolbar">
-              <span>Install once and use `ghost` from any repository.</span>
+              <span>Install once, open the Workbench, and keep command mode for automation.</span>
               <button data-copy-target="global-command" type="button">Copy</button>
             </div>
             <pre><code id="global-command">curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash
+ghost
 ghost setup bob
 ghost analyze .
 ghost explain
@@ -145,17 +154,23 @@ ghost analyze . --bob</code></pre>
 
           <div class="command-set" data-panel="source">
             <div class="command-toolbar">
-              <span>Clone the repo and link the CLI for development.</span>
+              <span>Clone the repo and create a user-local launcher for development.</span>
               <button data-copy-target="source-command" type="button">Copy</button>
             </div>
             <pre><code id="source-command">git clone https://github.com/deepdevjose/ghost-engineer.git
 cd ghost-engineer
 npm install
 npm run build
-cd apps/cli
-npm link
-cd ../..
+mkdir -p ~/.local/bin
+INSTALL_DIR="$(pwd)"
+cat > ~/.local/bin/ghost <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+exec node "$INSTALL_DIR/apps/cli/dist/index.js" "\$@"
+EOF
+chmod +x ~/.local/bin/ghost
 ghost setup bob
+ghost
 ghost analyze .</code></pre>
           </div>
         </div>
