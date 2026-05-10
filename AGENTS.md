@@ -8,7 +8,7 @@ Ghost Engineer is an npm-workspaces monorepo. Use `npm`, not pnpm or yarn, unles
 - `apps/web` contains the static installer and downloadable `install.sh`.
 - `packages/analyzers` owns deterministic repository scanning and file inspection.
 - `packages/artifact-writer` owns `.ghost/` artifact rendering.
-- `packages/core` orchestrates commands and isolates IBM Bob in `src/bob.ts`.
+- `packages/core` orchestrates commands, isolates IBM Bob execution in `src/bob.ts`, and keeps Bob availability/setup detection in `src/bob-status.ts`.
 - `packages/shared` contains cross-package TypeScript contracts.
 - `test/` contains `node:test` coverage for the built `dist/` output.
 
@@ -16,6 +16,10 @@ Ghost Engineer is an npm-workspaces monorepo. Use `npm`, not pnpm or yarn, unles
 
 - Keep deterministic analysis usable without IBM Bob.
 - Keep Bob behind the adapter boundary in `packages/core/src/bob.ts`.
+- Keep Bob setup/status logic separate from Bob execution.
+- Present Bob as central to the complete Ghost Engineer workflow, while preserving local-first deterministic analysis.
+- Do not imply IBM Bob is bundled with Ghost Engineer, permanently free, or exempt from IBM authentication, usage limits, trials, plans, or licenses.
+- Keep CLI, web, README, and `docs/ghost_engineer.md` consistent when changing Bob setup or workflow copy.
 - Preserve prompt and response artifacts under `.ghost/bob/` for every Bob-backed path.
 - Treat `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, `.ghost/bob-analysis.md`, `.ghost/docs/onboarding.md`, `.ghost/reports/initial-analysis.md`, `.ghost/reports/final-report.md`, and `.ghost/dashboard/index.html` as the baseline workspace contract.
 - Do not commit generated `.ghost/`, `dist/`, `node_modules/`, coverage, or local environment files.

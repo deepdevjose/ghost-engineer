@@ -83,6 +83,29 @@ export interface GhostBobOptions {
   context?: string;
 }
 
+export type GhostBobCommandSource = "cli" | "env" | "default";
+
+export interface GhostBobStatus {
+  command: string;
+  commandSource: GhostBobCommandSource;
+  executableAvailable: boolean;
+  executablePath?: string;
+  appearsCallable: boolean;
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  error?: string;
+  nodeVersion: string;
+  minimumNodeVersion: string;
+  nodeMeetsMinimum: boolean;
+  statusText: string;
+}
+
+export interface GhostBobSetupOptions {
+  command?: string;
+  install?: boolean;
+}
+
 export interface GhostBobRunResult {
   task: GhostBobTask;
   command: string;

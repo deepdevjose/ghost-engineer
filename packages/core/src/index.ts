@@ -21,6 +21,21 @@ import type {
   GhostProject,
 } from "@ghost-engineer/shared";
 import { runBob } from "./bob.js";
+import {
+  detectBobStatus,
+  formatBobRequiredMessage,
+} from "./bob-status.js";
+
+export {
+  BOB_NODE_MINIMUM_VERSION,
+  BOB_SHELL_INSTALL_COMMAND,
+  DEFAULT_BOB_COMMAND,
+  detectBobStatus,
+  formatBobActivationHint,
+  formatBobRequiredMessage,
+  formatBobSetupGuide,
+  setupBob,
+} from "./bob-status.js";
 
 export function initializeGhost(rootPath: string): string {
   return analyzeRepository(rootPath).summary;
@@ -165,6 +180,11 @@ export function prepareDashboard(rootPath: string): {
 }
 
 function runBobOrThrow(project: GhostProject, options: GhostBobOptions) {
+  const bobStatus = detectBobStatus({ command: options.command });
+  if (!bobStatus.executableAvailable || !bobStatus.appearsCallable) {
+    throw new Error(formatBobRequiredMessage(bobStatus));
+  }
+
   const result = runBob(project, options);
 
   if (!result.success) {

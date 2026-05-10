@@ -67,8 +67,11 @@ fi
 if command -v bob >/dev/null 2>&1; then
   echo "IBM Bob CLI detected: $(command -v bob)"
 else
-  echo "IBM Bob CLI was not detected. Local analysis works without Bob; --bob commands need Bob later."
+  echo "IBM Bob CLI was not detected."
+  echo "Local analysis works without Bob, but the complete workflow is Bob-powered."
+  echo "Run: ghost setup bob"
 fi
 
 echo "Ghost Engineer installed."
 echo "Open any repository and run: ghost analyze ."
+echo "For Bob-powered reasoning, run: ghost analyze . --bob"

@@ -27,20 +27,20 @@
         <div class="hero-copy">
           <p class="eyebrow">Ghost Engineer</p>
           <h1>Understand any repository before you change it.</h1>
-          <p class="summary">A Unix-first CLI that reconstructs repository intelligence locally, writes a `.ghost/` workspace, and sends structured context to IBM Bob only when you ask for AI reasoning.</p>
+          <p class="summary">A Unix-first CLI that reconstructs full-repository context locally, writes a `.ghost/` workspace, and hands that structured intelligence to IBM Bob for codebase-wide reasoning, documentation, test planning, and safe change guidance.</p>
           <div class="actions" aria-label="Primary install actions">
             <button class="primary" data-copy="curl -fsSL https://ghost-engineer.dev/install.sh | bash" type="button">Copy install command</button>
             <a class="secondary" href="./install.sh" download>Download install.sh</a>
           </div>
-          <p class="bob-note">Powered by IBM Bob for optional reasoning. Deterministic analysis works locally without Bob.</p>
+          <p class="bob-note">Deterministic analysis can run without Bob, but the complete Ghost Engineer workflow is Bob-powered. Bob Shell is a separate IBM product and requires IBMid authentication.</p>
         </div>
 
         <div class="hero-panel" aria-label="Ghost Engineer first run">
           <div class="hero-panel-heading">
             <img src="./assets/bobghost.png" alt="Ghost Engineer icon">
             <div>
-              <p>First run</p>
-              <strong>Install once. Run anywhere.</strong>
+              <p>Complete path</p>
+              <strong>Install Ghost. Connect Bob.</strong>
             </div>
           </div>
           <div class="terminal">
@@ -49,14 +49,15 @@
               <button data-copy-target="hero-command" type="button">Copy</button>
             </div>
             <pre><code id="hero-command">curl -fsSL https://ghost-engineer.dev/install.sh | bash
+ghost setup bob
 cd any-repository
-ghost analyze .</code></pre>
+ghost analyze . --bob</code></pre>
             <pre class="terminal-result" aria-label="Ghost analyze result"><code>Ghost Engineer analyzed any-repository
 Workspace created: .ghost/
-Start here: .ghost/project-summary.md</code></pre>
+Bob reasoning written: .ghost/bob/architecture-response.md</code></pre>
           </div>
           <div class="hero-output" aria-label="Generated workspace preview">
-            <span>Writes local intelligence</span>
+            <span>Reconstructs context for Bob</span>
             <ul>
               <li>.ghost/architecture.json</li>
               <li>.ghost/dependency-map.json</li>
@@ -65,16 +66,16 @@ Start here: .ghost/project-summary.md</code></pre>
           </div>
           <div class="signal-grid" aria-label="Product signals">
             <div>
-              <strong>Install once</strong>
-              <span>Global `ghost` command</span>
+              <strong>Scan locally</strong>
+              <span>Deterministic repository map</span>
             </div>
             <div>
-              <strong>Run anywhere</strong>
-              <span>Open any repository</span>
+              <strong>Reason with Bob</strong>
+              <span>Full-context AI workflow</span>
             </div>
             <div>
-              <strong>Bob optional</strong>
-              <span>AI reasoning on demand</span>
+              <strong>Evolve safely</strong>
+              <span>Docs, tests, reports, plans</span>
             </div>
           </div>
         </div>
@@ -83,37 +84,35 @@ Start here: .ghost/project-summary.md</code></pre>
       <section class="flow" id="commands" aria-label="Ghost Engineer workflow">
         <div class="section-heading">
           <p class="section-kicker">Workflow</p>
-          <h2>From install to repository context.</h2>
+          <h2>From install to Bob-powered repository context.</h2>
         </div>
         <div class="flow-grid">
           <article>
             <span>01</span>
-            <h3>Install once</h3>
+            <h3>Install Ghost Engineer</h3>
             <p>Global CLI, available from any repository.</p>
             <pre><code>curl -fsSL https://ghost-engineer.dev/install.sh | bash</code></pre>
           </article>
           <article>
             <span>02</span>
-            <h3>Run anywhere</h3>
-            <p>Open a codebase and scan it locally.</p>
+            <h3>Connect IBM Bob</h3>
+            <p>Check Bob Shell, install it if needed, then sign in with IBMid.</p>
+            <pre><code>ghost setup bob
+curl -fsSL https://bob.ibm.com/download/bobshell.sh | bash</code></pre>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Analyze any repository</h3>
+            <p>Ghost reconstructs local context before Bob receives anything.</p>
             <pre><code>cd any-repository
 ghost analyze .</code></pre>
           </article>
           <article>
-            <span>03</span>
-            <h3>Understand first</h3>
-            <p>Get architecture, dependencies, and summaries.</p>
-            <pre><code>.ghost/
-├── architecture.json
-├── dependency-map.json
-└── project-summary.md</code></pre>
-          </article>
-          <article>
             <span>04</span>
-            <h3>Ask Bob when useful</h3>
-            <p>Optional AI reasoning on top of local context.</p>
-            <pre><code>ghost explain
-ghost analyze . --bob # optional</code></pre>
+            <h3>Reason with Bob</h3>
+            <p>Use Bob over the structured `.ghost/` context for reports, docs, tests, and safe change guidance.</p>
+            <pre><code>ghost analyze . --bob
+ghost report . --bob</code></pre>
           </article>
         </div>
       </section>
@@ -124,7 +123,7 @@ ghost analyze . --bob # optional</code></pre>
             <div>
               <p class="section-kicker">Install path</p>
               <h2>Install</h2>
-              <p class="panel-copy">Global installs the CLI for any repository. Source is for local development from this repo.</p>
+              <p class="panel-copy">Global installs Ghost for any repository. Then `ghost setup bob` guides Bob Shell installation, Node.js requirements, and IBMid sign-in.</p>
             </div>
             <div class="tabs" role="tablist" aria-label="Install mode">
               <button class="tab active" data-tab="global" type="button">Global</button>
@@ -138,6 +137,7 @@ ghost analyze . --bob # optional</code></pre>
               <button data-copy-target="global-command" type="button">Copy</button>
             </div>
             <pre><code id="global-command">curl -fsSL https://ghost-engineer.dev/install.sh | bash
+ghost setup bob
 ghost analyze .
 ghost explain
 ghost analyze . --bob</code></pre>
@@ -155,6 +155,7 @@ npm run build
 cd apps/cli
 npm link
 cd ../..
+ghost setup bob
 ghost analyze .</code></pre>
           </div>
         </div>
@@ -173,7 +174,7 @@ ghost analyze .</code></pre>
             </div>
             <div>
               <dt>Bob CLI</dt>
-              <dd>Optional for local analysis</dd>
+              <dd>Core for full workflow</dd>
             </div>
           </dl>
         </div>
@@ -214,7 +215,7 @@ ghost analyze .</code></pre>
             <article>
               <span>03</span>
               <h3>Bob reasoning</h3>
-              <p>Prompt and response artifacts when you choose to send structured context to IBM Bob.</p>
+              <p>Prompt and response artifacts when Ghost sends structured context to IBM Bob.</p>
             </article>
           </div>
         </div>

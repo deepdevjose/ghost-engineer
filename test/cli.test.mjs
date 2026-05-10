@@ -13,13 +13,42 @@ const cliPath = new URL("../apps/cli/dist/index.js", import.meta.url);
 test("CLI analyze command writes a .ghost workspace", () => {
   const root = createFixtureRepository("ghost-cli-");
 
-  const result = runCli(["analyze", "."], root);
+  const result = runCli(["analyze", "."], root, {
+    GHOST_BOB_COMMAND: join(root, "missing-bob"),
+  });
 
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /Ghost Engineer analyzed cli-fixture/);
+  assert.match(result.stdout, /IBM Bob not detected/);
+  assert.match(result.stdout, /ghost setup bob/);
   assert.ok(existsSync(join(root, ".ghost", "architecture.json")));
   assert.ok(existsSync(join(root, ".ghost", "project-summary.md")));
   assert.ok(existsSync(join(root, ".ghost", "reports", "initial-analysis.md")));
+});
+
+test("CLI setup bob guides missing Bob installation", () => {
+  const root = createFixtureRepository("ghost-cli-setup-bob-");
+
+  const result = runCli(["setup", "bob", "--bob-command", join(root, "missing-bob")], root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /IBM Bob was not found/);
+  assert.match(result.stdout, /repository-wide reasoning/);
+  assert.match(result.stdout, /curl -fsSL https:\/\/bob\.ibm\.com\/download\/bobshell\.sh \| bash/);
+  assert.match(result.stdout, /ghost setup bob --install/);
+  assert.match(result.stdout, /IBMid/);
+  assert.match(result.stdout, /ghost analyze \. --bob/);
+});
+
+test("CLI setup bob reports detected Bob-compatible command", () => {
+  const root = createFixtureRepository("ghost-cli-setup-bob-ok-");
+  const fakeBob = createFakeBob(root);
+
+  const result = runCli(["setup", "bob", "--bob-command", fakeBob], root);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /IBM Bob detected/);
+  assert.match(result.stdout, /ghost analyze \. --bob/);
 });
 
 test("CLI command suite covers explain, docs, testgen, patch, and report", () => {
@@ -77,10 +106,9 @@ test("CLI analyze --bob fails clearly when Bob is unavailable", () => {
   );
 
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /Bob architecture run failed/);
-  assert.match(result.stderr, /Deterministic Ghost artifacts were written/);
+  assert.match(result.stderr, /IBM Bob is required/);
+  assert.match(result.stderr, /ghost setup bob/);
   assert.ok(existsSync(join(root, ".ghost", "architecture.json")));
-  assert.ok(existsSync(join(root, ".ghost", "bob", "architecture-response.md")));
 });
 
 test("CLI serve exposes the generated dashboard", async () => {
@@ -120,9 +148,10 @@ test("CLI serve exposes the generated dashboard", async () => {
   assert.equal(stderr, "");
 });
 
-function runCli(args, cwd) {
+function runCli(args, cwd, env = {}) {
   return spawnSync(process.execPath, [cliPath.pathname, ...args], {
     cwd,
+    env: { ...process.env, ...env },
     encoding: "utf8",
   });
 }

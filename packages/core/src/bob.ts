@@ -9,8 +9,7 @@ import {
   writeBobPrompt,
   writeBobResponse,
 } from "@ghost-engineer/artifact-writer";
-
-const DEFAULT_BOB_COMMAND = "bob";
+import { DEFAULT_BOB_COMMAND } from "./bob-status.js";
 
 export function runBob(project: GhostProject, options: GhostBobOptions): GhostBobRunResult {
   const command = options.command ?? process.env.GHOST_BOB_COMMAND ?? DEFAULT_BOB_COMMAND;

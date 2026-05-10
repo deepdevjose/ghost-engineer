@@ -22,9 +22,12 @@ test("web installer build emits static entry files", () => {
   assert.match(html, /Ghost Engineer Installer/);
   assert.match(html, /rel="icon" type="image\/png" href="\.\/assets\/bobghost\.png"/);
   assert.match(html, /Understand any repository before you change it/);
-  assert.match(html, /Install once\. Run anywhere/);
+  assert.match(html, /Install Ghost\. Connect Bob/);
+  assert.match(html, /ghost setup bob/);
+  assert.match(html, /https:\/\/bob\.ibm\.com\/download\/bobshell\.sh/);
+  assert.match(html, /IBMid authentication/);
   assert.match(html, /Workspace created: \.ghost\//);
-  assert.match(html, /Optional AI reasoning on top of local context/);
+  assert.match(html, /Reason with Bob/);
   assert.match(html, /\.ghost\/architecture\.json/);
   assert.match(html, /analyze \. --bob/);
   assert.match(html, /npm link/);

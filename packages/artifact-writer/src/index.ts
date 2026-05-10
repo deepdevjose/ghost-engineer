@@ -277,7 +277,7 @@ function renderBobAnalysis(project: GhostProject): string {
     "",
     "Ghost Engineer reconstructs local structure, entry points, dependency signals, and risk findings before Bob is asked to reason over the repository.",
     "The deterministic context is stored in `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, and `.ghost/reports/initial-analysis.md`.",
-    "Run commands with `--bob` to write prompt and response files under `.ghost/bob/`.",
+    "Run `ghost setup bob` to connect IBM Bob Shell, then run commands with `--bob` to write prompt and response files under `.ghost/bob/`.",
     "",
     "## Highest Priority Findings",
     "",

@@ -6,7 +6,9 @@ import { dirname, extname, resolve, sep } from "node:path";
 import { Command } from "commander";
 import {
   analyzeRepository,
+  detectBobStatus,
   explainRepository,
+  formatBobActivationHint,
   generateDocumentation,
   generatePatchPlan,
   generateReport,
@@ -14,6 +16,7 @@ import {
   initializeGhost,
   prepareDashboard,
   runBobAnalysis,
+  setupBob,
 } from "@ghost-engineer/core";
 import type { GhostBobOptions, GhostBobTask } from "@ghost-engineer/shared";
 
@@ -25,6 +28,7 @@ interface BobCliOptions {
   bobModel?: string;
   bobTrust?: boolean;
   goal?: string;
+  install?: boolean;
   port?: string;
   root?: string;
   task?: GhostBobTask;
@@ -36,13 +40,19 @@ program
   .name("ghost")
   .description("Ghost Engineer command-line interface")
   .version("0.1.0")
-  .showHelpAfterError();
+  .showHelpAfterError()
+  .addHelpText(
+    "after",
+    "\nBob setup:\n  Run `ghost setup bob` to connect IBM Bob for repository-wide reasoning.\n",
+  );
 
 program
   .command("init")
   .argument("[path]", "Path to the project", ".")
   .description("Initialize a .ghost workspace with a baseline analysis")
-  .action((path: string) => run(() => initializeGhost(resolve(path))));
+  .action((path: string) =>
+    run(() => withBobActivationHint(initializeGhost(resolve(path)), {})),
+  );
 
 const analyze = program
   .command("analyze")
@@ -51,10 +61,13 @@ const analyze = program
 addBobOptions(analyze);
 analyze.action((path: string, options: BobCliOptions) =>
   run(() =>
-    analyzeRepository(
-      resolve(path),
-      maybeBobOptions(options, "architecture"),
-    ).summary,
+    withBobActivationHint(
+      analyzeRepository(
+        resolve(path),
+        maybeBobOptions(options, "architecture"),
+      ).summary,
+      options,
+    ),
   ),
 );
 
@@ -66,10 +79,13 @@ const explain = program
 addBobOptions(explain);
 explain.action((target: string | undefined, options: BobCliOptions) =>
   run(() =>
-    explainRepository(
-      resolve(options.root ?? "."),
-      target,
-      maybeBobOptions(options, target ? "file" : "architecture", target),
+    withBobActivationHint(
+      explainRepository(
+        resolve(options.root ?? "."),
+        target,
+        maybeBobOptions(options, target ? "file" : "architecture", target),
+      ),
+      options,
     ),
   ),
 );
@@ -80,7 +96,12 @@ const docs = program
   .description("Generate onboarding documentation from the current analysis");
 addBobOptions(docs);
 docs.action((path: string, options: BobCliOptions) =>
-  run(() => generateDocumentation(resolve(path), maybeBobOptions(options, "docs"))),
+  run(() =>
+    withBobActivationHint(
+      generateDocumentation(resolve(path), maybeBobOptions(options, "docs")),
+      options,
+    ),
+  ),
 );
 
 const testgen = program
@@ -89,7 +110,12 @@ const testgen = program
   .description("Generate a risk-driven test plan");
 addBobOptions(testgen);
 testgen.action((path: string, options: BobCliOptions) =>
-  run(() => generateTestPlan(resolve(path), maybeBobOptions(options, "tests"))),
+  run(() =>
+    withBobActivationHint(
+      generateTestPlan(resolve(path), maybeBobOptions(options, "tests")),
+      options,
+    ),
+  ),
 );
 
 const patch = program
@@ -100,10 +126,13 @@ const patch = program
 addBobOptions(patch);
 patch.action((path: string, options: BobCliOptions) =>
   run(() =>
-    generatePatchPlan(
-      resolve(path),
-      options.goal ?? "",
-      maybeBobOptions(options, "patch", options.goal),
+    withBobActivationHint(
+      generatePatchPlan(
+        resolve(path),
+        options.goal ?? "",
+        maybeBobOptions(options, "patch", options.goal),
+      ),
+      options,
     ),
   ),
 );
@@ -114,8 +143,31 @@ const report = program
   .description("Generate the final Ghost Engineer report");
 addBobOptions(report);
 report.action((path: string, options: BobCliOptions) =>
-  run(() => generateReport(resolve(path), maybeBobOptions(options, "report"))),
+  run(() =>
+    withBobActivationHint(
+      generateReport(resolve(path), maybeBobOptions(options, "report")),
+      options,
+    ),
+  ),
 );
+
+const setup = program
+  .command("setup")
+  .description("Set up external tools used by Ghost Engineer");
+
+setup
+  .command("bob")
+  .description("Check, install, and connect IBM Bob Shell")
+  .option("--bob-command <command>", "Bob executable path")
+  .option("--install", "Run the official IBM Bob Shell installer")
+  .action((options: BobCliOptions) =>
+    run(() =>
+      setupBob({
+        command: options.bobCommand,
+        install: options.install,
+      }),
+    ),
+  );
 
 const bob = program
   .command("bob")
@@ -180,7 +232,7 @@ function addBobOptions(command: Command): void {
 
 function addBobRuntimeOptions(command: Command): void {
   command
-    .option("--bob-command <command>", "Bob executable path", "bob")
+    .option("--bob-command <command>", "Bob executable path")
     .option("--bob-model <model>", "Bob model")
     .option("--bob-max-coins <coins>", "Stop Bob if this coin budget is exceeded")
     .option("--bob-trust", "Pass --trust to Bob")
@@ -231,6 +283,17 @@ function parseOptionalNumber(
   }
 
   return parsed;
+}
+
+function withBobActivationHint(output: string, options: BobCliOptions): string {
+  if (options.bob) {
+    return output;
+  }
+
+  const hint = formatBobActivationHint(
+    detectBobStatus({ command: options.bobCommand }),
+  );
+  return hint ? [output, "", hint].join("\n") : output;
 }
 
 function parseBobTask(value: string): GhostBobTask {

@@ -1,10 +1,10 @@
 # Ghost Engineer
 
-Ghost Engineer is a Unix-first repository intelligence CLI powered by IBM Bob. It deterministically scans a project first, writes a local `.ghost/` workspace, and only then hands structured repository context to Bob for higher-level reasoning when you opt in with `--bob`.
+Ghost Engineer is a Unix-first repository intelligence CLI powered by IBM Bob. It reconstructs repository context locally, writes a `.ghost/` workspace, and then hands that structured intelligence to IBM Bob for codebase-wide reasoning, documentation, test planning, refactor guidance, and engineering reports.
 
-The MVP is CLI-first: analyze, explain, document, plan tests, plan patches, report, and serve a local dashboard without requiring Bob for the deterministic core.
+Deterministic local analysis works without Bob. The complete Ghost Engineer workflow is Bob-powered.
 
-## Install
+## Install Ghost Engineer
 
 Ghost Engineer 0.1 is installed from source because npm package publishing is intentionally deferred.
 
@@ -12,11 +12,7 @@ Ghost Engineer 0.1 is installed from source because npm package publishing is in
 curl -fsSL https://ghost-engineer.dev/install.sh | bash
 ```
 
-The installer clones or updates the repository at `${HOME}/.ghost-engineer/source`, runs `npm ci`, builds the monorepo, and links the CLI globally with `npm link` from `apps/cli`. After that, open any repository and run:
-
-```bash
-ghost analyze .
-```
+The installer clones or updates the repository at `${HOME}/.ghost-engineer/source`, runs `npm ci`, builds the monorepo, and links the CLI globally with `npm link` from `apps/cli`.
 
 Manual source install:
 
@@ -31,34 +27,65 @@ cd ../..
 ghost --version
 ```
 
-IBM Bob is optional for local scanning, but required for `--bob` reasoning:
+## Connect IBM Bob
+
+IBM Bob Shell is a separate IBM product. It is not bundled with Ghost Engineer and may require its own trial, plan, usage limits, or license.
+
+After installing Ghost Engineer, run:
 
 ```bash
-bob --help
+ghost setup bob
 ```
 
-## Development
+If Bob Shell is missing, Ghost shows the official IBM Bob Shell installer command:
 
 ```bash
-npm install
-npm run build
-npm test
+curl -fsSL https://bob.ibm.com/download/bobshell.sh | bash
 ```
 
-Run the web installer locally:
+Ghost does not install external software silently. If you want Ghost to run the official installer explicitly, use:
 
 ```bash
-npm run build -w @ghost-engineer/web
-npm run preview -w @ghost-engineer/web
+ghost setup bob --install
 ```
 
-Run the CLI from the workspace without linking:
+Bob Shell requires Node.js 22.15.0 or later. Interactive Bob Shell sessions use IBMid authentication by default, so after installation run:
 
 ```bash
-npm run dev -w @ghost-engineer/cli -- analyze .
+bob
+```
+
+Sign in with your IBMid when prompted, then return to your repository and run Ghost with Bob.
+
+Official IBM references: [Bob Shell installation](https://bob.ibm.com/docs/shell/getting-started/install-and-setup), [interactive Bob Shell sign-in](https://bob.ibm.com/docs/shell/getting-started/start-bobshell-interactive), and [IBM Bob pricing/trial information](https://bob.ibm.com/pricing).
+
+## Use Ghost After Restarting
+
+Once linked, `ghost` is available from your shell. After restarting your machine, open any repository:
+
+```bash
+cd any-repository
+ghost analyze .
+```
+
+If Bob is not installed yet, Ghost still writes local context and prints the next step:
+
+```text
+IBM Bob not detected. Local context is ready. Run `ghost setup bob` to unlock Bob-powered reasoning.
+```
+
+Then run the complete Bob-powered path:
+
+```bash
+ghost setup bob
+ghost analyze . --bob
+ghost explain --bob
+ghost report . --bob
 ```
 
 ## Commands
+
+Local deterministic commands:
 
 ```bash
 ghost analyze .
@@ -71,13 +98,15 @@ ghost report
 ghost serve
 ```
 
-Bob-backed commands preserve prompts and responses under `.ghost/bob/`:
+Bob-powered commands:
 
 ```bash
 ghost analyze . --bob
 ghost explain packages/core/src/bob.ts --bob
-ghost report . --bob
+ghost docs . --bob
+ghost testgen . --bob
 ghost patch --goal "prepare release" --bob
+ghost report . --bob
 ghost bob . --task architecture
 ```
 
@@ -93,7 +122,7 @@ Useful Bob options:
 
 ## Generated Workspace
 
-`ghost analyze .` writes deterministic artifacts without Bob:
+`ghost analyze .` writes deterministic artifacts first. Bob-backed commands add prompt and response artifacts under `.ghost/bob/`.
 
 ```text
 .ghost/
@@ -116,25 +145,55 @@ Useful Bob options:
     └── index.html
 ```
 
-The `bob/`, `patches/patch-plan.md`, and `docs/test-plan.md` files appear when the matching Bob, patch, or test-generation commands run. The deterministic baseline is `architecture.json`, `dependency-map.json`, `project-summary.md`, `bob-analysis.md`, `docs/onboarding.md`, `reports/initial-analysis.md`, `reports/final-report.md`, and `dashboard/index.html`.
+## Recommended Hackathon Demo
 
-## What Bob Adds
+```bash
+ghost analyze .
+ghost setup bob
+ghost analyze . --bob
+ghost explain packages/core/src/bob.ts --bob
+ghost testgen . --bob
+ghost patch --goal "prepare the MVP for release" --bob
+ghost report . --bob
+ghost serve
+```
 
-Ghost Engineer owns repository scanning, artifact generation, file inspection, risk detection, and the `.ghost/` workspace. IBM Bob is isolated behind `packages/core/src/bob.ts` and receives the reconstructed context for architecture explanations, file reasoning, report enrichment, test strategy, and patch strategy.
+This shows the required product story: deterministic recovery first, guided Bob onboarding, and IBM Bob reasoning over Ghost's reconstructed repository intelligence.
 
-If Bob is unavailable, `ghost analyze .`, `ghost explain`, `ghost docs`, `ghost testgen`, `ghost patch --goal "..."`, `ghost report`, and `ghost serve` still work locally. Commands run with `--bob` fail clearly if the Bob executable cannot run, while preserving the deterministic artifacts and Bob prompt/response files that were produced before the failure.
+## Development
+
+```bash
+npm install
+npm run build
+npm test
+```
+
+Run the web installer locally:
+
+```bash
+npm run build -w @ghost-engineer/web
+npm run preview -w @ghost-engineer/web
+```
+
+Run the CLI from the workspace without linking:
+
+```bash
+npm run dev -w @ghost-engineer/cli -- analyze .
+```
 
 ## Release Scope
 
 Implemented in 0.1:
 
-- Static web installer with platform hints, source install commands, and downloadable `install.sh`
+- Static web installer with platform hints, Ghost install commands, Bob setup guidance, and downloadable `install.sh`
 - Source-backed global CLI install through `npm link`
+- `ghost setup bob` for Bob Shell detection, Node.js requirement checks, installer guidance, and IBMid sign-in next steps
 - Repository scanning with ignored build, dependency, cache, vendor, and `.ghost/` directories
 - Language, framework, package manifest, script, entry point, dependency, and risk detection
 - File-level explanation using imports, exports, declarations, and notes
 - Markdown and JSON artifact generation under `.ghost/`
 - IBM Bob CLI adapter with prompt/response artifacts
+- Graceful Bob-missing behavior for `--bob` commands
 - Reviewable patch plans without automatic code edits
 - Risk-driven test-plan generation
 - Local static dashboard

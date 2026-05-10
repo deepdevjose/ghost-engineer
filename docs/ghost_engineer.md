@@ -77,6 +77,7 @@ The installer:
 - provides guided installation
 - verifies dependencies
 - installs the Ghost CLI globally from the source checkout for Release 0.1
+- directs users into IBM Bob Shell setup for the complete Bob-powered workflow
 
 Example installation:
 
@@ -97,6 +98,26 @@ npm link
 
 After installation, the `ghost` command becomes globally available on the system.
 
+IBM Bob Shell is set up separately:
+
+```bash
+ghost setup bob
+```
+
+Ghost Engineer shows the official IBM Bob Shell installer command when Bob is missing:
+
+```bash
+curl -fsSL https://bob.ibm.com/download/bobshell.sh | bash
+```
+
+Ghost Engineer does not install external software silently. Users can explicitly request installer execution with:
+
+```bash
+ghost setup bob --install
+```
+
+Bob Shell requires Node.js 22.15.0 or later. Interactive Bob Shell sessions use IBMid authentication by default. IBM Bob is a separate IBM product and is not bundled with Ghost Engineer.
+
 ### 2. Ghost CLI (Core Platform)
 
 The CLI is the main product experience.
@@ -116,7 +137,8 @@ Ghost Engineer then:
 - analyzes dependencies
 - builds a cognitive map
 - prepares structured context for IBM Bob
-- uses IBM Bob for repository-wide reasoning when `--bob` is requested
+- guides Bob setup when Bob is missing
+- uses IBM Bob for repository-wide reasoning in the complete workflow
 
 ## Example Commands
 
@@ -162,6 +184,12 @@ ghost patch --goal "reduce memory overhead"
 ghost report
 ```
 
+### Set Up IBM Bob
+
+```bash
+ghost setup bob
+```
+
 ## Repository Intelligence
 
 Ghost Engineer analyzes:
@@ -195,7 +223,7 @@ Ghost Engineer uses Bob to:
 - generate patch strategies
 - automate engineering workflows
 
-Bob is deeply integrated into the platform workflow and serves as the core development partner.
+Bob is deeply integrated into the complete platform workflow and serves as the core reasoning partner after Ghost reconstructs deterministic local context.
 
 ## AI Patch Generation
 
@@ -301,7 +329,8 @@ The first release is a CLI-first product that proves the workflow end to end and
 ### Release 0.1
 
 - `apps/web` provides the web installer with platform hints, install commands, source setup commands, and a downloadable `install.sh`.
-- `ghost analyze .` scans a repository and writes `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, `.ghost/bob-analysis.md`, onboarding docs, `.ghost/reports/initial-analysis.md`, a final report, and a dashboard page.
+- `ghost analyze .` scans a repository and writes `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, `.ghost/bob-analysis.md`, onboarding docs, `.ghost/reports/initial-analysis.md`, a final report, and a dashboard page. If Bob is missing, it completes local work and points the user to `ghost setup bob`.
+- `ghost setup bob` checks Bob Shell availability, checks Node.js against Bob Shell's 22.15.0 minimum requirement, shows the official IBM Bob Shell installer command, explains IBMid sign-in, and makes clear that IBM Bob is a separate IBM product.
 - `ghost analyze . --bob` sends the structured repository context to IBM Bob and writes prompt/response artifacts under `.ghost/bob/`.
 - `ghost explain` summarizes the detected repository architecture.
 - `ghost explain <file>` summarizes imports, exports, declarations, and basic file-level notes.

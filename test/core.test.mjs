@@ -12,7 +12,9 @@ import { join } from "node:path";
 import { test } from "node:test";
 import {
   analyzeRepository,
+  detectBobStatus,
   explainRepository,
+  formatBobActivationHint,
   generateDocumentation,
   generatePatchPlan,
   generateReport,
@@ -72,7 +74,26 @@ test("runBobAnalysis stores prompt and response from a Bob-compatible command", 
   );
 });
 
-test("Bob failures preserve deterministic artifacts and Bob response files", () => {
+test("detectBobStatus reports when Bob is unavailable", () => {
+  const root = createFixtureRepository("ghost-bob-status-");
+  const status = detectBobStatus({ command: join(root, "missing-bob") });
+
+  assert.equal(status.executableAvailable, false);
+  assert.equal(status.appearsCallable, false);
+  assert.match(formatBobActivationHint(status), /ghost setup bob/);
+});
+
+test("detectBobStatus reports a callable Bob-compatible command", () => {
+  const root = createFixtureRepository("ghost-bob-status-ok-");
+  const fakeBob = createFakeBob(root);
+  const status = detectBobStatus({ command: fakeBob });
+
+  assert.equal(status.executableAvailable, true);
+  assert.equal(status.appearsCallable, true);
+  assert.equal(status.command, fakeBob);
+});
+
+test("Bob failures preserve deterministic artifacts and guide setup", () => {
   const root = createFixtureRepository("ghost-bob-fail-");
 
   assert.throws(
@@ -81,11 +102,9 @@ test("Bob failures preserve deterministic artifacts and Bob response files", () 
         task: "architecture",
         command: join(root, "missing-bob"),
       }),
-    /Deterministic Ghost artifacts were written before Bob ran/,
+    /ghost setup bob/,
   );
   assert.ok(existsSync(join(root, ".ghost", "architecture.json")));
-  assert.ok(existsSync(join(root, ".ghost", "bob", "architecture-prompt.md")));
-  assert.ok(existsSync(join(root, ".ghost", "bob", "architecture-response.md")));
 });
 
 test("explainRepository can add Bob reasoning for a file", () => {
