@@ -51,10 +51,12 @@ print_node_upgrade_guidance() {
 
   if is_fedora_rhel_like && command -v dnf >/dev/null 2>&1; then
     echo "Detected Fedora/RHEL-style system with dnf. Suggested steps:"
-    echo "  sudo dnf install -y dnf-plugins-core"
-    echo "  sudo dnf config-manager --add-repo https://rpm.nodesource.com/pub_22.x/nodistro/nodesource.repo"
     echo "  sudo dnf install -y nodejs"
     echo "  node --version"
+    echo ""
+    echo "If the installed Node.js version is below ${MIN_NODE_VERSION},"
+    echo "use nvm (see below) or check:"
+    echo "  https://nodejs.org/download/release/ for manual installation."
   elif is_macos && command -v brew >/dev/null 2>&1; then
     echo "Detected macOS with Homebrew. Suggested steps:"
     echo "  brew update"
@@ -125,6 +127,54 @@ is_supported_node_version() {
   return 1
 }
 
+create_ghost_launcher() {
+  local launcher_dir="${HOME}/.local/bin"
+  local launcher="${launcher_dir}/ghost"
+
+  mkdir -p "${launcher_dir}"
+
+  cat > "${launcher}" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+INSTALL_DIR="${GHOST_ENGINEER_HOME:-${HOME}/.ghost-engineer/source}"
+exec node "${INSTALL_DIR}/apps/cli/dist/index.js" "$@"
+EOF
+
+  chmod +x "${launcher}"
+
+  echo "${launcher}"
+}
+
+ensure_local_bin_on_path() {
+  local launcher_dir="${HOME}/.local/bin"
+  local shell_profile=""
+
+  if [ -z "${PATH##*${launcher_dir}*}" ]; then
+    return 0
+  fi
+
+  echo
+  echo "~/.local/bin is not on your PATH. Add it to ensure 'ghost' is available after restart:"
+  echo
+
+  if [ -n "${BASH_VERSION:-}" ]; then
+    echo "For bash, add to ~/.bashrc:"
+    echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+  elif [ -n "${ZSH_VERSION:-}" ]; then
+    echo "For zsh, add to ~/.zshrc:"
+    echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+  else
+    echo "For your shell, add to your profile (~/.profile or similar):"
+    echo "  export PATH=\"\$HOME/.local/bin:\$PATH\""
+  fi
+
+  echo
+  echo "Then reload your shell:"
+  echo "  source ~/.bashrc   # for bash"
+  echo "  source ~/.zshrc    # for zsh"
+  echo
+}
+
 if ! command -v node >/dev/null 2>&1; then
   echo "Node.js was not found on PATH."
   print_node_upgrade_guidance
@@ -178,18 +228,16 @@ fi
 
 npm run build
 
-(
-  cd apps/cli
-  npm link
-)
+launcher="$(create_ghost_launcher)"
 
 if command -v ghost >/dev/null 2>&1; then
-  echo "Ghost CLI linked: $(command -v ghost)"
+  echo "Ghost CLI installed: $(command -v ghost)"
   ghost --version
 else
-  echo "Ghost CLI was linked, but 'ghost' is not on PATH."
-  echo "Check your npm global prefix with: npm prefix -g"
-  exit 1
+  ensure_local_bin_on_path
+  echo "Ghost CLI created at: ${launcher}"
+  echo "After adding ~/.local/bin to PATH and reloading your shell, run:"
+  echo "  ghost --version"
 fi
 
 if command -v bob >/dev/null 2>&1; then

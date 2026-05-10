@@ -14,7 +14,7 @@ curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash
 
 The installer checks that Node.js `22.15.0` or newer is available, and prints guided next-step commands when Node.js is missing or outdated.
 
-The installer clones or updates the repository at `${HOME}/.ghost-engineer/source`, runs `npm ci`, builds the monorepo, and links the CLI globally with `npm link` from `apps/cli`.
+The installer clones or updates the repository at `${HOME}/.ghost-engineer/source`, runs `npm ci`, builds the monorepo, and creates a user-owned launcher at `~/.local/bin/ghost` that executes the CLI from the installed source.
 
 Manual source install:
 
@@ -23,9 +23,14 @@ git clone https://github.com/deepdevjose/ghost-engineer.git
 cd ghost-engineer
 npm install
 npm run build
-cd apps/cli
-npm link
-cd ../..
+mkdir -p ~/.local/bin
+cat > ~/.local/bin/ghost <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exec node "$(pwd)/apps/cli/dist/index.js" "$@"
+EOF
+chmod +x ~/.local/bin/ghost
+export PATH="$HOME/.local/bin:$PATH"
 ghost --version
 ```
 

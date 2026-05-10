@@ -42,11 +42,16 @@ test("web installer script is publish-ready shell", () => {
 
   assert.match(contents, /git clone/);
   assert.match(contents, /npm ci|npm install/);
-  assert.match(contents, /npm link/);
+  assert.match(contents, /npm run build/);
+  assert.match(contents, /create_ghost_launcher/);
+  assert.match(contents, /\.local\/bin\/ghost/);
   assert.match(contents, /command -v bob/);
   assert.match(contents, /22\.15\.0/);
   assert.match(contents, /ghost-engineer\.pages\.dev\/install\.sh/);
+  assert.doesNotMatch(contents, /npm link/);
   assert.doesNotMatch(contents, /Node\.js 20|20 or newer|20\+/);
+  assert.doesNotMatch(contents, /--add-repo/);
+  assert.doesNotMatch(contents, /dnf-plugins-core/);
   assert.equal(Boolean(stats.mode & 0o111), true);
 });
 
@@ -102,6 +107,44 @@ test("web installer guides clearly when Node.js version is below 22.15.0", () =>
   assert.match(result.stdout, /requires Node\.js 22\.15\.0 or newer/);
   assert.match(result.stdout, /Found v22\.14\.0/);
   assert.match(result.stdout, /curl -fsSL https:\/\/ghost-engineer\.pages\.dev\/install\.sh \| bash/);
+});
+
+test("web installer Fedora guidance uses dnf install nodejs, not obsolete --add-repo", () => {
+  const installScript = join(webDist.pathname, "install.sh");
+  const contents = readFileSync(installScript, "utf8");
+
+  assert.match(contents, /sudo dnf install -y nodejs/);
+  assert.doesNotMatch(contents, /--add-repo/);
+  assert.doesNotMatch(contents, /dnf-plugins-core/);
+  assert.doesNotMatch(contents, /nodesoure\.repo/);
+});
+
+test("web installer Fedora guidance includes version check after install", () => {
+  const installScript = join(webDist.pathname, "install.sh");
+  const contents = readFileSync(installScript, "utf8");
+
+  const fedoraSection = contents.match(/if is_fedora_rhel_like[\s\S]*?fi;/)?.[0] ?? "";
+  assert.match(fedoraSection, /node --version/);
+  assert.match(fedoraSection, /nvm/);
+});
+
+test("web installer creates ~/.local/bin launcher instead of npm link", () => {
+  const installScript = join(webDist.pathname, "install.sh");
+  const contents = readFileSync(installScript, "utf8");
+
+  assert.match(contents, /create_ghost_launcher/);
+  assert.match(contents, /launcher_dir="\${HOME}\/.local\/bin"/);
+  assert.match(contents, /INSTALL_DIR.*apps\/cli\/dist\/index\.js/);
+  assert.match(contents, /chmod \+x "\${launcher}"/);
+});
+
+test("web installer provides PATH guidance when ~/.local/bin is not on PATH", () => {
+  const installScript = join(webDist.pathname, "install.sh");
+  const contents = readFileSync(installScript, "utf8");
+
+  assert.match(contents, /ensure_local_bin_on_path/);
+  assert.match(contents, /export PATH.*HOME.*\.local\/bin/);
+  assert.match(contents, /bashrc|zshrc|\.profile/);
 });
 
 test("web dev server falls back when the requested port is busy", async () => {

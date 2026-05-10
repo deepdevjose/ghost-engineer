@@ -94,11 +94,19 @@ git clone https://github.com/deepdevjose/ghost-engineer.git
 cd ghost-engineer
 npm install
 npm run build
-cd apps/cli
-npm link
+mkdir -p ~/.local/bin
+cat > ~/.local/bin/ghost <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+INSTALL_DIR="${GHOST_ENGINEER_HOME:-${HOME}/.ghost-engineer/source}"
+exec node "${INSTALL_DIR}/apps/cli/dist/index.js" "$@"
+EOF
+chmod +x ~/.local/bin/ghost
+export PATH="$HOME/.local/bin:$PATH"
+ghost --version
 ```
 
-After installation, the `ghost` command becomes globally available on the system.
+After installation, the `ghost` command becomes globally available on the system by adding `~/.local/bin` to your shell's PATH (automatic on most modern Unix systems after terminal restart).
 
 IBM Bob Shell is set up separately:
 
