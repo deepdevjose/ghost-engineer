@@ -221,7 +221,11 @@ function parseOptionalNumber(
     return undefined;
   }
 
-  const parsed = Number.parseInt(value, 10);
+  if (value.trim() === "") {
+    throw new Error(`Invalid ${flagName}: ${value}`);
+  }
+
+  const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 0) {
     throw new Error(`Invalid ${flagName}: ${value}`);
   }
@@ -292,6 +296,8 @@ function contentTypeFor(path: string): string {
       return "text/javascript; charset=utf-8";
     case ".json":
       return "application/json; charset=utf-8";
+    case ".svg":
+      return "image/svg+xml; charset=utf-8";
     default:
       return "text/plain; charset=utf-8";
   }

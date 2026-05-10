@@ -25,7 +25,7 @@
         <div class="installer-copy">
           <p class="eyebrow">IBM Bob powered CLI</p>
           <h1>Install Ghost Engineer and recover repository intelligence.</h1>
-          <p class="summary">Detect your environment, install the CLI, verify Bob, and generate the local `.ghost/` workspace from one guided screen.</p>
+          <p class="summary">Detect your environment, link the source-built CLI globally, verify Bob when available, and generate the local `.ghost/` workspace from one guided screen.</p>
           <div class="actions" aria-label="Primary install actions">
             <button class="primary" data-copy="curl -fsSL https://ghost-engineer.dev/install.sh | bash">Copy curl install</button>
             <a class="secondary" href="./install.sh" download>Download install.sh</a>
@@ -50,7 +50,7 @@
             </div>
             <div>
               <dt>Bob CLI</dt>
-              <dd>Run `bob --help` locally</dd>
+              <dd>Optional for local analysis</dd>
             </div>
           </dl>
         </div>
@@ -67,6 +67,7 @@
           <div class="command-set active" data-panel="global">
             <pre><code>curl -fsSL https://ghost-engineer.dev/install.sh | bash
 ghost analyze .
+ghost explain
 ghost analyze . --bob</code></pre>
           </div>
 
@@ -75,7 +76,10 @@ ghost analyze . --bob</code></pre>
 cd ghost-engineer
 npm install
 npm run build
-npm run dev -w @ghost-engineer/cli -- analyze . --bob</code></pre>
+cd apps/cli
+npm link
+cd ../..
+ghost analyze .</code></pre>
           </div>
         </div>
       </section>
@@ -88,7 +92,7 @@ npm run dev -w @ghost-engineer/cli -- analyze . --bob</code></pre>
         <div class="artifact-grid">
           <article>
             <h3>Architecture</h3>
-            <p>`architecture.json` and `dependency-map.json` capture structure, scripts, packages, and entry points.</p>
+            <p>`architecture.json`, `dependency-map.json`, and `project-summary.md` capture structure, scripts, packages, and entry points.</p>
           </article>
           <article>
             <h3>Bob Reasoning</h3>
@@ -96,7 +100,7 @@ npm run dev -w @ghost-engineer/cli -- analyze . --bob</code></pre>
           </article>
           <article>
             <h3>Reports</h3>
-            <p>`docs/`, `patches/`, and `reports/` keep onboarding, test, patch, and release notes together.</p>
+            <p>`docs/`, `patches/`, and `reports/` keep onboarding, initial analysis, test, patch, and release notes together.</p>
           </article>
         </div>
       </section>

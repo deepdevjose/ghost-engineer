@@ -20,8 +20,12 @@ test("writeGhostWorkspace creates the expected artifact tree", () => {
 
   assert.ok(existsSync(artifacts.architecturePath));
   assert.ok(existsSync(artifacts.dependencyMapPath));
+  assert.ok(existsSync(artifacts.projectSummaryPath));
   assert.ok(existsSync(artifacts.bobAnalysisPath));
+  assert.ok(existsSync(artifacts.initialAnalysisPath));
   assert.ok(existsSync(artifacts.reportPath));
   assert.ok(existsSync(artifacts.dashboardPath));
+  assert.match(readFileSync(artifacts.projectSummaryPath, "utf8"), /Project Summary/);
+  assert.match(readFileSync(artifacts.initialAnalysisPath, "utf8"), /Initial Analysis/);
   assert.match(readFileSync(artifacts.reportPath, "utf8"), /Ghost Engineer Report/);
 });

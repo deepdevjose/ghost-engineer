@@ -53,7 +53,8 @@ export function createBobPrompt(
     goal ? `Goal: ${goal}` : "",
     "",
     "You are IBM Bob working inside Ghost Engineer.",
-    "Use the repository intelligence below to produce practical engineering guidance.",
+    "Use the deterministic repository intelligence below as source context before making higher-level inferences.",
+    "Call out uncertainty when the local scan does not prove something.",
     "Do not claim you edited files unless explicitly asked by the user outside this prompt.",
     "",
     "## Expected Output",
@@ -69,6 +70,14 @@ export function createBobPrompt(
     `Files: ${project.totals.files}`,
     `Directories: ${project.totals.directories}`,
     "",
+    "## Ghost Workspace Artifacts",
+    "",
+    "- .ghost/architecture.json",
+    "- .ghost/dependency-map.json",
+    "- .ghost/project-summary.md",
+    "- .ghost/reports/initial-analysis.md",
+    "- .ghost/reports/final-report.md",
+    "",
     "## Languages",
     "",
     ...project.languages.map(
@@ -80,6 +89,10 @@ export function createBobPrompt(
     "",
     ...formatSignals(project),
     "",
+    "## Package Manifests",
+    "",
+    ...formatPackageManifests(project),
+    "",
     "## Entry Points",
     "",
     ...project.entryPoints.map(
@@ -90,6 +103,10 @@ export function createBobPrompt(
     "## Scripts",
     "",
     ...formatScripts(project),
+    "",
+    "## Top-Level Directories",
+    "",
+    ...formatDirectories(project),
     "",
     "## Risks",
     "",
@@ -181,6 +198,34 @@ function formatScripts(project: GhostProject): string[] {
     `- ${name}`,
     ...commands.map((command) => `  - ${command}`),
   ]);
+}
+
+function formatPackageManifests(project: GhostProject): string[] {
+  if (project.packageManifests.length === 0) {
+    return ["- No package manifests detected."];
+  }
+
+  return project.packageManifests.map((manifest) => {
+    const version = manifest.version ? `@${manifest.version}` : "";
+    const workspaceCount =
+      manifest.workspaces.length > 0
+        ? `; workspaces: ${manifest.workspaces.join(", ")}`
+        : "";
+    return `- ${manifest.name}${version} (${manifest.path}${workspaceCount})`;
+  });
+}
+
+function formatDirectories(project: GhostProject): string[] {
+  if (project.directories.length === 0) {
+    return ["- No top-level directories detected."];
+  }
+
+  return project.directories
+    .slice(0, 20)
+    .map(
+      (directory) =>
+        `- ${directory.path}: ${directory.files} files, ${directory.directories} nested directories`,
+    );
 }
 
 function formatRisks(risks: GhostRiskFinding[]): string[] {

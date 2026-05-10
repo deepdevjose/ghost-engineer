@@ -31,8 +31,10 @@ export function writeGhostWorkspace(project: GhostProject): GhostArtifactSet {
     workspacePath,
     architecturePath: join(workspacePath, "architecture.json"),
     dependencyMapPath: join(workspacePath, "dependency-map.json"),
+    projectSummaryPath: join(workspacePath, "project-summary.md"),
     bobAnalysisPath: join(workspacePath, "bob-analysis.md"),
     bobDirectoryPath,
+    initialAnalysisPath: join(reportsPath, "initial-analysis.md"),
     onboardingDocsPath: join(docsPath, "onboarding.md"),
     reportPath: join(reportsPath, "final-report.md"),
     dashboardPath: join(dashboardDirectory, "index.html"),
@@ -56,7 +58,9 @@ export function writeGhostWorkspace(project: GhostProject): GhostArtifactSet {
     dependencies: project.dependencies,
     scripts: project.scripts,
   });
+  writeFileSync(artifacts.projectSummaryPath, renderProjectSummary(project));
   writeFileSync(artifacts.bobAnalysisPath, renderBobAnalysis(project));
+  writeFileSync(artifacts.initialAnalysisPath, renderInitialAnalysis(project));
   writeFileSync(artifacts.onboardingDocsPath, renderOnboardingDocs(project));
   writeFileSync(artifacts.reportPath, renderFinalReport(project));
   writeFileSync(artifacts.dashboardPath, renderDashboard(project));
@@ -138,6 +142,8 @@ export function formatInitialSummary(
 
   if (artifacts) {
     lines.push(`Workspace: ${displayPath(project, artifacts.workspacePath)}`);
+    lines.push(`Project summary: ${displayPath(project, artifacts.projectSummaryPath)}`);
+    lines.push(`Initial analysis: ${displayPath(project, artifacts.initialAnalysisPath)}`);
     lines.push(`Report: ${displayPath(project, artifacts.reportPath)}`);
   }
 
@@ -211,10 +217,47 @@ export function formatBobRunSummary(
 
   if (!result.success) {
     lines.push(`Exit code: ${result.exitCode ?? "unknown"}`);
-    lines.push(`Error: ${result.error ?? result.stderr.trim()}`);
+    lines.push(`Error: ${formatBobError(result)}`);
+    lines.push("Deterministic Ghost artifacts were written before Bob ran.");
   }
 
   return lines.join("\n");
+}
+
+function renderProjectSummary(project: GhostProject): string {
+  return [
+    `# Project Summary: ${project.projectName}`,
+    "",
+    `Generated: ${project.analyzedAt}`,
+    "",
+    "## Classification",
+    "",
+    `- Type: ${project.projectType}`,
+    `- Package manager: ${project.packageManager}`,
+    `- Files: ${project.totals.files}`,
+    `- Directories: ${project.totals.directories}`,
+    `- Package manifests: ${project.totals.packageManifests}`,
+    "",
+    "## Main Architecture Signals",
+    "",
+    formatFrameworkSignals(project),
+    "",
+    "## Primary Entry Points",
+    "",
+    project.entryPoints.length > 0
+      ? project.entryPoints
+          .slice(0, 8)
+          .map(
+            (entryPoint) =>
+              `- ${entryPoint.kind}: ${entryPoint.path} (${entryPoint.source})`,
+          )
+          .join("\n")
+      : "- No entry points detected.",
+    "",
+    "## Highest Priority Risks",
+    "",
+    formatRisks(project.riskFindings.slice(0, 5)),
+  ].join("\n");
 }
 
 function renderBobAnalysis(project: GhostProject): string {
@@ -233,11 +276,59 @@ function renderBobAnalysis(project: GhostProject): string {
     "## Reasoning Context",
     "",
     "Ghost Engineer reconstructs local structure, entry points, dependency signals, and risk findings before Bob is asked to reason over the repository.",
+    "The deterministic context is stored in `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, and `.ghost/reports/initial-analysis.md`.",
     "Run commands with `--bob` to write prompt and response files under `.ghost/bob/`.",
     "",
     "## Highest Priority Findings",
     "",
     formatRisks(project.riskFindings.slice(0, 5)),
+  ].join("\n");
+}
+
+function renderInitialAnalysis(project: GhostProject): string {
+  return [
+    `# Initial Analysis: ${project.projectName}`,
+    "",
+    `Generated: ${project.analyzedAt}`,
+    "",
+    "## Repository Scan",
+    "",
+    `Ghost Engineer scanned ${project.totals.files} files across ${project.totals.directories} directories while ignoring generated, dependency, cache, vendor, and previous \`.ghost/\` workspace directories.`,
+    "",
+    "## Languages",
+    "",
+    formatLanguageTable(project),
+    "",
+    "## Package Manifests",
+    "",
+    project.packageManifests.length > 0
+      ? project.packageManifests
+          .map(
+            (manifest) =>
+              `- ${manifest.name} (${manifest.path})${manifest.version ? ` v${manifest.version}` : ""}`,
+          )
+          .join("\n")
+      : "- No package manifests detected.",
+    "",
+    "## Scripts",
+    "",
+    formatScriptCommands(project),
+    "",
+    "## Dependencies",
+    "",
+    formatDependencySummary(project),
+    "",
+    "## Framework Signals",
+    "",
+    formatFrameworkSignals(project),
+    "",
+    "## Entry Points",
+    "",
+    formatEntryPoints(project),
+    "",
+    "## Risks",
+    "",
+    formatRisks(project.riskFindings),
   ].join("\n");
 }
 
@@ -318,7 +409,8 @@ function renderFinalReport(project: GhostProject): string {
     "",
     "- Local repository scanning is implemented.",
     "- Artifact generation is implemented.",
-    "- External IBM Bob calls are intentionally isolated for a future adapter.",
+    "- IBM Bob CLI calls are isolated behind the adapter in `packages/core/src/bob.ts`.",
+    "- Bob prompt and response artifacts are preserved under `.ghost/bob/` when `--bob` is used.",
     "- Patch generation currently produces a reviewable plan, not automatic code edits.",
   ].join("\n");
 }
@@ -358,10 +450,9 @@ function renderTestPlan(project: GhostProject): string {
     "",
     "## Package Tests",
     "",
-    ...project.packageManifests.map(
-      (manifest) =>
-        `- ${manifest.name}: replace placeholder test scripts with real coverage for command behavior.`,
-    ),
+    ...(project.packageManifests.length > 0
+      ? project.packageManifests.map((manifest) => formatPackageTestAdvice(manifest))
+      : ["- No package manifests detected; start with repository-level smoke tests."]),
     "",
     "## Risk-Driven Coverage",
     "",
@@ -555,16 +646,22 @@ function suggestWorkFromGoal(project: GhostProject, goal: string): string[] {
   const normalizedGoal = goal.toLowerCase();
   const suggestions: string[] = [];
 
-  if (normalizedGoal.includes("test") || project.riskFindings.some((risk) => risk.id.includes("test"))) {
-    suggestions.push("Add a real test runner and cover the analyzer, writer, core orchestration, and CLI command parsing.");
+  if (
+    normalizedGoal.includes("test") ||
+    project.riskFindings.some((risk) => risk.id.includes("test"))
+  ) {
+    suggestions.push("Add or extend focused coverage for changed analyzer, writer, core orchestration, and CLI command behavior.");
   }
 
-  if (normalizedGoal.includes("doc") || project.riskFindings.some((risk) => risk.id === "thin-readme")) {
+  if (
+    normalizedGoal.includes("doc") ||
+    project.riskFindings.some((risk) => risk.id === "thin-readme")
+  ) {
     suggestions.push("Expand README usage docs with install, analyze, explain, docs, report, patch, testgen, and serve examples.");
   }
 
   if (normalizedGoal.includes("ai") || normalizedGoal.includes("bob")) {
-    suggestions.push("Create a Bob adapter boundary that accepts the generated architecture and dependency maps as structured context.");
+    suggestions.push("Keep IBM Bob work behind the adapter boundary and feed it the generated architecture, dependency, summary, and risk context.");
   }
 
   if (normalizedGoal.includes("performance") || normalizedGoal.includes("optimize")) {
@@ -579,6 +676,21 @@ function suggestWorkFromGoal(project: GhostProject, goal: string): string[] {
   return suggestions;
 }
 
+function formatPackageTestAdvice(
+  manifest: GhostProject["packageManifests"][number],
+): string {
+  const testScript = manifest.scripts.test;
+  if (!testScript) {
+    return `- ${manifest.name}: add a package-level smoke test or document why repository-level coverage is enough.`;
+  }
+
+  if (/no tests yet|echo/i.test(testScript)) {
+    return `- ${manifest.name}: replace the placeholder test script with real coverage.`;
+  }
+
+  return `- ${manifest.name}: keep \`${testScript}\` covering the package behavior that changes.`;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -586,4 +698,13 @@ function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function formatBobError(result: GhostBobRunResult): string {
+  return (
+    result.error ||
+    result.stderr.trim() ||
+    result.stdout.trim() ||
+    "Bob command did not return a successful exit status."
+  );
 }

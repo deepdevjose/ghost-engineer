@@ -63,7 +63,7 @@ Using IBM Bob, the platform can:
 - generate documentation
 - create tests
 - suggest refactors
-- generate contextual code patches
+- generate contextual patch plans
 
 ## Product Architecture
 
@@ -76,7 +76,7 @@ The installer:
 - detects the user environment
 - provides guided installation
 - verifies dependencies
-- installs the Ghost CLI globally
+- installs the Ghost CLI globally from the source checkout for Release 0.1
 
 Example installation:
 
@@ -84,10 +84,15 @@ Example installation:
 curl -fsSL https://ghost-engineer.dev/install.sh | bash
 ```
 
-Or:
+For local source installation:
 
 ```bash
-npm install -g ghost-engineer
+git clone https://github.com/deepdevjose/ghost-engineer.git
+cd ghost-engineer
+npm install
+npm run build
+cd apps/cli
+npm link
 ```
 
 After installation, the `ghost` command becomes globally available on the system.
@@ -110,7 +115,8 @@ Ghost Engineer then:
 - reconstructs architecture
 - analyzes dependencies
 - builds a cognitive map
-- uses IBM Bob for repository-wide reasoning
+- prepares structured context for IBM Bob
+- uses IBM Bob for repository-wide reasoning when `--bob` is requested
 
 ## Example Commands
 
@@ -186,7 +192,7 @@ Ghost Engineer uses Bob to:
 - reconstruct architecture
 - detect risky patterns
 - suggest improvements
-- generate patches
+- generate patch strategies
 - automate engineering workflows
 
 Bob is deeply integrated into the platform workflow and serves as the core development partner.
@@ -201,12 +207,12 @@ Example:
 ghost patch --goal "optimize frame processing pipeline"
 ```
 
-Generated result:
+Release 0.1 generated result:
 
-- introduced frame buffer reuse
-- reduced repeated tensor allocation
-- added runtime comments
-- generated regression test
+- identifies files to inspect
+- proposes implementation steps
+- recommends tests and rollback notes
+- preserves the plan for human review without applying code automatically
 
 ## Local Intelligence Workspace
 
@@ -218,10 +224,13 @@ Example structure:
 .ghost/
 ├── architecture.json
 ├── dependency-map.json
+├── project-summary.md
 ├── bob-analysis.md
 ├── patches/
 ├── docs/
 ├── reports/
+│   ├── initial-analysis.md
+│   └── final-report.md
 └── dashboard/
 ```
 
@@ -237,14 +246,15 @@ Command:
 ghost serve
 ```
 
-This opens a browser-based workspace that visualizes:
+Release 0.1 opens a browser-based workspace that shows:
 
-- architecture graphs
-- dependency maps
-- IBM Bob reasoning
-- generated patches
-- technical debt analysis
-- engineering reports
+- project classification
+- repository metrics
+- language distribution
+- entry points
+- risk findings
+
+Richer architecture graphs, dependency-map visualization, and Bob reasoning views are deferred after 0.1.
 
 ## Supported Platforms
 
@@ -258,12 +268,12 @@ Ghost Engineer is optimized for Unix-based engineering environments due to its C
 
 ## Example Use Case
 
-Ghost Engineer analyzes the Vision-Language Runtime repository and automatically:
+Ghost Engineer analyzes the Vision-Language Runtime repository and can:
 
 - reconstructs the multimodal inference pipeline
 - explains WebGPU execution flow
 - detects runtime bottlenecks
-- generates optimization patches
+- generate optimization patch plans
 - creates onboarding documentation
 - produces a complete software recovery report
 
@@ -278,7 +288,7 @@ Ghost Engineer aims to become an AI-native software intelligence platform capabl
 
 ## Short Pitch
 
-Ghost Engineer is a Unix-first AI-powered software recovery platform that uses IBM Bob to reconstruct, explain, document, and evolve complex repositories automatically.
+Ghost Engineer is a Unix-first AI-powered software recovery platform that uses IBM Bob to reconstruct, explain, document, and guide the evolution of complex repositories.
 
 ## Tagline
 
@@ -291,7 +301,7 @@ The first release is a CLI-first product that proves the workflow end to end and
 ### Release 0.1
 
 - `apps/web` provides the web installer with platform hints, install commands, source setup commands, and a downloadable `install.sh`.
-- `ghost analyze .` scans a repository and writes `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/bob-analysis.md`, onboarding docs, a final report, and a dashboard page.
+- `ghost analyze .` scans a repository and writes `.ghost/architecture.json`, `.ghost/dependency-map.json`, `.ghost/project-summary.md`, `.ghost/bob-analysis.md`, onboarding docs, `.ghost/reports/initial-analysis.md`, a final report, and a dashboard page.
 - `ghost analyze . --bob` sends the structured repository context to IBM Bob and writes prompt/response artifacts under `.ghost/bob/`.
 - `ghost explain` summarizes the detected repository architecture.
 - `ghost explain <file>` summarizes imports, exports, declarations, and basic file-level notes.

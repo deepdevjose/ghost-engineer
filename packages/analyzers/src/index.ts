@@ -52,16 +52,23 @@ interface PackageJsonShape {
 const IGNORED_DIRECTORIES = new Set([
   ".git",
   ".ghost",
+  ".hg",
+  ".idea",
   ".next",
   ".nuxt",
   ".svelte-kit",
   ".turbo",
+  ".venv",
+  ".vscode",
   ".cache",
   "build",
   "coverage",
   "dist",
   "node_modules",
   "out",
+  "target",
+  "tmp",
+  "vendor",
 ]);
 
 const LANGUAGE_BY_EXTENSION = new Map<string, string>([
@@ -171,6 +178,8 @@ export function createRepositoryAnalysis(rootPath: string): GhostProject {
 export function inspectFile(rootPath: string, targetPath: string): GhostFileInsight {
   const absoluteRoot = resolve(rootPath);
   const absoluteTarget = resolve(absoluteRoot, targetPath);
+
+  assertInsideRoot(absoluteRoot, absoluteTarget, targetPath);
 
   if (!existsSync(absoluteTarget)) {
     throw new Error(`File not found: ${targetPath}`);
@@ -399,12 +408,23 @@ function collectEntryPoints(
   }
 
   for (const candidate of [
+    "index.js",
+    "index.ts",
+    "main.py",
+    "cmd/main.go",
+    "src/App.tsx",
+    "src/App.jsx",
     "src/index.ts",
     "src/index.tsx",
     "src/index.js",
+    "src/index.jsx",
     "src/main.ts",
     "src/main.tsx",
     "src/main.js",
+    "src/main.jsx",
+    "src/main.py",
+    "src/lib.rs",
+    "src/main.rs",
     "apps/cli/src/index.ts",
   ]) {
     if (filePaths.has(candidate)) {
@@ -691,7 +711,7 @@ function summarizeDirectories(
   files: DiscoveredFile[],
 ): GhostDirectorySummary[] {
   return directories
-    .filter((directory) => !directory.includes(sep))
+    .filter((directory) => !directory.includes("/"))
     .map((directory) => ({
       path: directory,
       files: files.filter((file) => file.path.startsWith(`${directory}/`)).length,
@@ -851,6 +871,13 @@ function countCodeMarkers(contents: string): number {
 
 function normalizePath(path: string): string {
   return path.split(sep).join("/");
+}
+
+function assertInsideRoot(rootPath: string, targetPath: string, displayPath: string): void {
+  const rootPrefix = rootPath.endsWith(sep) ? rootPath : `${rootPath}${sep}`;
+  if (targetPath !== rootPath && !targetPath.startsWith(rootPrefix)) {
+    throw new Error(`File is outside repository root: ${displayPath}`);
+  }
 }
 
 function severityRank(severity: GhostRiskFinding["severity"]): number {

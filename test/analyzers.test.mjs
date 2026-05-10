@@ -39,6 +39,32 @@ test("createRepositoryAnalysis detects a TypeScript CLI workspace", () => {
   assert.equal(project.riskFindings.some((risk) => risk.id === "placeholder-test-scripts"), false);
 });
 
+test("createRepositoryAnalysis ignores generated and workspace directories", () => {
+  const root = mkdtempSync(join(tmpdir(), "ghost-ignore-"));
+  mkdirSync(join(root, "src"), { recursive: true });
+  mkdirSync(join(root, "node_modules", "dependency"), { recursive: true });
+  mkdirSync(join(root, ".ghost", "reports"), { recursive: true });
+  mkdirSync(join(root, "dist"), { recursive: true });
+  writeFileSync(
+    join(root, "package.json"),
+    JSON.stringify({ name: "ignore-fixture", scripts: { test: "node --test" } }),
+  );
+  writeFileSync(join(root, "src", "index.js"), "export const ok = true;\n");
+  writeFileSync(join(root, "node_modules", "dependency", "package.json"), "{}");
+  writeFileSync(join(root, ".ghost", "reports", "final-report.md"), "generated\n");
+  writeFileSync(join(root, "dist", "bundle.js"), "generated\n");
+
+  const project = createRepositoryAnalysis(root);
+
+  assert.equal(project.totals.files, 2);
+  assert.equal(
+    project.packageManifests.some((manifest) =>
+      manifest.path.includes("node_modules"),
+    ),
+    false,
+  );
+});
+
 test("inspectFile reports imports, exports, and declarations", () => {
   const root = mkdtempSync(join(tmpdir(), "ghost-file-"));
   mkdirSync(join(root, "src"), { recursive: true });
@@ -52,4 +78,13 @@ test("inspectFile reports imports, exports, and declarations", () => {
   assert.deepEqual(insight.imports, ["commander"]);
   assert.deepEqual(insight.exports, ["main"]);
   assert.deepEqual(insight.declarations, ["main"]);
+});
+
+test("inspectFile rejects paths outside the repository root", () => {
+  const root = mkdtempSync(join(tmpdir(), "ghost-file-root-"));
+
+  assert.throws(
+    () => inspectFile(root, "../outside.ts"),
+    /outside repository root/,
+  );
 });

@@ -128,8 +128,10 @@ export interface GhostArtifactSet {
   workspacePath: string;
   architecturePath: string;
   dependencyMapPath: string;
+  projectSummaryPath: string;
   bobAnalysisPath: string;
   bobDirectoryPath: string;
+  initialAnalysisPath: string;
   onboardingDocsPath: string;
   reportPath: string;
   dashboardPath: string;

@@ -13,7 +13,10 @@ import { test } from "node:test";
 import {
   analyzeRepository,
   explainRepository,
+  generateDocumentation,
   generatePatchPlan,
+  generateReport,
+  generateTestPlan,
   runBobAnalysis,
 } from "../packages/core/dist/index.js";
 
@@ -23,6 +26,19 @@ test("analyzeRepository writes core Ghost artifacts", () => {
 
   assert.match(result.summary, /Ghost Engineer analyzed core-fixture/);
   assert.ok(existsSync(join(root, ".ghost", "architecture.json")));
+  assert.ok(existsSync(join(root, ".ghost", "project-summary.md")));
+  assert.ok(existsSync(join(root, ".ghost", "reports", "initial-analysis.md")));
+  assert.ok(existsSync(join(root, ".ghost", "reports", "final-report.md")));
+});
+
+test("documentation, testgen, and report commands regenerate their artifacts", () => {
+  const root = createFixtureRepository("ghost-docs-");
+
+  assert.match(generateDocumentation(root), /Documentation written/);
+  assert.match(generateTestPlan(root), /Test plan written/);
+  assert.match(generateReport(root), /Report written/);
+  assert.ok(existsSync(join(root, ".ghost", "docs", "onboarding.md")));
+  assert.ok(existsSync(join(root, ".ghost", "docs", "test-plan.md")));
   assert.ok(existsSync(join(root, ".ghost", "reports", "final-report.md")));
 });
 
@@ -47,9 +63,29 @@ test("runBobAnalysis stores prompt and response from a Bob-compatible command", 
   assert.match(output, /Bob architecture run completed/);
   assert.ok(existsSync(join(root, ".ghost", "bob", "architecture-prompt.md")));
   assert.match(
+    readFileSync(join(root, ".ghost", "bob", "architecture-prompt.md"), "utf8"),
+    /project-summary\.md/,
+  );
+  assert.match(
     readFileSync(join(root, ".ghost", "bob", "architecture-response.md"), "utf8"),
     /fake bob received/,
   );
+});
+
+test("Bob failures preserve deterministic artifacts and Bob response files", () => {
+  const root = createFixtureRepository("ghost-bob-fail-");
+
+  assert.throws(
+    () =>
+      runBobAnalysis(root, {
+        task: "architecture",
+        command: join(root, "missing-bob"),
+      }),
+    /Deterministic Ghost artifacts were written before Bob ran/,
+  );
+  assert.ok(existsSync(join(root, ".ghost", "architecture.json")));
+  assert.ok(existsSync(join(root, ".ghost", "bob", "architecture-prompt.md")));
+  assert.ok(existsSync(join(root, ".ghost", "bob", "architecture-response.md")));
 });
 
 test("explainRepository can add Bob reasoning for a file", () => {
