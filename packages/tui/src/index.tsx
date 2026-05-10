@@ -21,6 +21,7 @@ export {
 } from "./services.js";
 export { renderStaticWorkbench } from "./render-static.js";
 export { shouldUseColor } from "./theme.js";
+export { GHOST_ASCII, GHOST_ENGINEER_VERSION, renderWelcomeText } from "./welcome.js";
 export { WorkbenchApp } from "./components/WorkbenchApp.js";
 export type {
   ActivityEvent,

@@ -1,11 +1,14 @@
 import { NAVIGATION_ITEMS } from "./navigation.js";
 import type { WorkbenchSnapshot } from "./types.js";
+import { renderWelcomeText } from "./welcome.js";
 
 export function renderStaticWorkbench(snapshot: WorkbenchSnapshot): string {
   const project = snapshot.project;
   const bobReady = snapshot.bobStatus.executableAvailable && snapshot.bobStatus.appearsCallable;
 
   return [
+    renderWelcomeText(snapshot),
+    "",
     "Ghost Engineer Workbench",
     "Repository intelligence for IBM Bob",
     "",

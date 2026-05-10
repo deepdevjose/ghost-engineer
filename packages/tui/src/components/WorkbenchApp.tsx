@@ -25,6 +25,7 @@ import { HelpOverlay } from "./HelpOverlay.js";
 import { OverviewView } from "./OverviewView.js";
 import { Panel } from "./Panel.js";
 import { Sidebar } from "./Sidebar.js";
+import { WelcomeScreen } from "./WelcomeScreen.js";
 
 export function WorkbenchApp({
   services,
@@ -40,6 +41,7 @@ export function WorkbenchApp({
   const app = useApp();
   const [selectedIndex, setSelectedIndex] = useState(indexForView("overview"));
   const [activeView, setActiveView] = useState<WorkbenchView>("overview");
+  const [showWelcome, setShowWelcome] = useState(true);
   const [activity, setActivity] = useState<ActivityEvent[]>([
     createActivity("info", "Workbench started"),
   ]);
@@ -88,6 +90,43 @@ export function WorkbenchApp({
   );
 
   useInput((input, key) => {
+    if (showWelcome) {
+      if (input === "q") {
+        app.exit();
+        return;
+      }
+
+      if (input === "?") {
+        setShowWelcome(false);
+        setShowHelp(true);
+        addActivity("info", "Help opened");
+        return;
+      }
+
+      if (input === "a") {
+        setShowWelcome(false);
+        setActiveView("analyze");
+        setSelectedIndex(indexForView("analyze"));
+        runTask("analyze", "Local analysis", () => services.analyzeLocal().summary);
+        return;
+      }
+
+      if (input === "b") {
+        setShowWelcome(false);
+        setActiveView("bob");
+        setSelectedIndex(indexForView("bob"));
+        runPrimaryAction("bob");
+        return;
+      }
+
+      if (key.return) {
+        setShowWelcome(false);
+        addActivity("info", "Workbench opened");
+      }
+
+      return;
+    }
+
     if (input === "q") {
       app.exit();
       return;
@@ -133,6 +172,10 @@ export function WorkbenchApp({
 
   const activeLabel =
     NAVIGATION_ITEMS.find((item) => item.view === activeView)?.label ?? "Overview";
+
+  if (showWelcome) {
+    return <WelcomeScreen snapshot={snapshot} colorEnabled={colorEnabled} />;
+  }
 
   return (
     <Box flexDirection="column">
