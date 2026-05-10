@@ -12,6 +12,8 @@ Ghost Engineer 0.1 is installed from source because npm package publishing is in
 curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash
 ```
 
+The installer checks that Node.js `22.15.0` or newer is available, and prints guided next-step commands when Node.js is missing or outdated.
+
 The installer clones or updates the repository at `${HOME}/.ghost-engineer/source`, runs `npm ci`, builds the monorepo, and links the CLI globally with `npm link` from `apps/cli`.
 
 Manual source install:
@@ -49,7 +51,7 @@ Ghost does not install external software silently. If you want Ghost to run the 
 ghost setup bob --install
 ```
 
-Bob Shell requires Node.js 22.15.0 or later. Interactive Bob Shell sessions use IBMid authentication by default, so after installation run:
+Bob Shell requires Node.js 22.15.0 or later. Ghost Engineer aligns to the same baseline for the complete workflow. Interactive Bob Shell sessions use IBMid authentication by default, so after installation run:
 
 ```bash
 bob

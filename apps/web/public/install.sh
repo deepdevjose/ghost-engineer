@@ -4,16 +4,144 @@ set -euo pipefail
 REPO_URL="${GHOST_ENGINEER_REPO:-https://github.com/deepdevjose/ghost-engineer.git}"
 INSTALL_DIR="${GHOST_ENGINEER_HOME:-${HOME}/.ghost-engineer/source}"
 REF="${GHOST_ENGINEER_REF:-main}"
+MIN_NODE_VERSION="22.15.0"
+RERUN_INSTALL_CMD="curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash"
+
+print_rerun_instruction() {
+  echo
+  echo "After updating Node.js, rerun Ghost Engineer installer:"
+  echo "${RERUN_INSTALL_CMD}"
+}
+
+is_fedora_rhel_like() {
+  local os_tokens=""
+
+  if [ -r /etc/os-release ]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    os_tokens="${ID:-} ${ID_LIKE:-}"
+  fi
+
+  case "${os_tokens}" in
+    *fedora*|*rhel*|*centos*|*rocky*|*almalinux*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+is_macos() {
+  case "${OSTYPE:-}" in
+    darwin*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+print_node_upgrade_guidance() {
+  echo
+  echo "Node.js ${MIN_NODE_VERSION}+ is required for the complete Ghost Engineer + IBM Bob workflow."
+  echo "Ghost does not install Node.js automatically or run privileged package-manager commands for you."
+  echo
+
+  if is_fedora_rhel_like && command -v dnf >/dev/null 2>&1; then
+    echo "Detected Fedora/RHEL-style system with dnf. Suggested steps:"
+    echo "  sudo dnf install -y dnf-plugins-core"
+    echo "  sudo dnf config-manager --add-repo https://rpm.nodesource.com/pub_22.x/nodistro/nodesource.repo"
+    echo "  sudo dnf install -y nodejs"
+    echo "  node --version"
+  elif is_macos && command -v brew >/dev/null 2>&1; then
+    echo "Detected macOS with Homebrew. Suggested steps:"
+    echo "  brew update"
+    echo "  brew install node@22"
+    echo "  brew link --overwrite --force node@22"
+    echo "  node --version"
+  else
+    echo "Generic Unix fallback (nvm) to install Node 22 LTS safely for your user:"
+    echo "  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
+    echo "  export NVM_DIR=\"$HOME/.nvm\""
+    echo "  [ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\""
+    echo "  nvm install 22"
+    echo "  nvm use 22"
+    echo "  node --version"
+  fi
+
+  print_rerun_instruction
+}
+
+normalize_semver_triplet() {
+  local raw="$1"
+  local cleaned="${raw#v}"
+  local major="0"
+  local minor="0"
+  local patch="0"
+
+  IFS='.' read -r major minor patch _rest <<<"${cleaned}"
+  major="${major%%[^0-9]*}"
+  minor="${minor%%[^0-9]*}"
+  patch="${patch%%[^0-9]*}"
+
+  major="${major:-0}"
+  minor="${minor:-0}"
+  patch="${patch:-0}"
+
+  echo "${major} ${minor} ${patch}"
+}
+
+is_supported_node_version() {
+  local version="$1"
+  local min_version="$2"
+  local ver_major ver_minor ver_patch
+  local min_major min_minor min_patch
+
+  read -r ver_major ver_minor ver_patch <<<"$(normalize_semver_triplet "${version}")"
+  read -r min_major min_minor min_patch <<<"$(normalize_semver_triplet "${min_version}")"
+
+  if [ "${ver_major}" -gt "${min_major}" ]; then
+    return 0
+  fi
+
+  if [ "${ver_major}" -lt "${min_major}" ]; then
+    return 1
+  fi
+
+  if [ "${ver_minor}" -gt "${min_minor}" ]; then
+    return 0
+  fi
+
+  if [ "${ver_minor}" -lt "${min_minor}" ]; then
+    return 1
+  fi
+
+  if [ "${ver_patch}" -ge "${min_patch}" ]; then
+    return 0
+  fi
+
+  return 1
+}
 
 if ! command -v node >/dev/null 2>&1; then
-  echo "Ghost Engineer requires Node.js 20 or newer."
-  echo "Install Node.js first, then run this installer again."
+  echo "Node.js was not found on PATH."
+  print_node_upgrade_guidance
   exit 1
 fi
 
-NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]")"
-if [ "$NODE_MAJOR" -lt 20 ]; then
-  echo "Ghost Engineer requires Node.js 20 or newer. Found $(node --version)."
+NODE_VERSION="$(node --version 2>/dev/null || true)"
+
+if [ -z "${NODE_VERSION}" ]; then
+  echo "Node.js appears to be installed but its version could not be determined."
+  print_node_upgrade_guidance
+  exit 1
+fi
+
+if ! is_supported_node_version "${NODE_VERSION}" "${MIN_NODE_VERSION}"; then
+  echo "Ghost Engineer requires Node.js ${MIN_NODE_VERSION} or newer. Found ${NODE_VERSION}."
+  print_node_upgrade_guidance
   exit 1
 fi
 

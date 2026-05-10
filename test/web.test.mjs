@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { once } from "node:events";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { get } from "node:http";
 import { createServer } from "node:net";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 
@@ -24,6 +25,7 @@ test("web installer build emits static entry files", () => {
   assert.match(html, /Understand any repository before you change it/);
   assert.match(html, /Install Ghost\. Connect Bob/);
   assert.match(html, /ghost setup bob/);
+  assert.match(html, /Node\.js 22\.15\.0\+/);
   assert.match(html, /https:\/\/bob\.ibm\.com\/download\/bobshell\.sh/);
   assert.match(html, /IBMid authentication/);
   assert.match(html, /Workspace created: \.ghost\//);
@@ -42,7 +44,64 @@ test("web installer script is publish-ready shell", () => {
   assert.match(contents, /npm ci|npm install/);
   assert.match(contents, /npm link/);
   assert.match(contents, /command -v bob/);
+  assert.match(contents, /22\.15\.0/);
+  assert.match(contents, /ghost-engineer\.pages\.dev\/install\.sh/);
+  assert.doesNotMatch(contents, /Node\.js 20|20 or newer|20\+/);
   assert.equal(Boolean(stats.mode & 0o111), true);
+});
+
+test("web installer guides clearly when Node.js is missing", () => {
+  const installScript = join(webDist.pathname, "install.sh");
+  const emptyBin = mkdtempSync(join(tmpdir(), "ghost-install-no-node-"));
+  const bashPath = resolveBash();
+
+  const result = spawnSync(bashPath, [installScript], {
+    env: {
+      ...process.env,
+      PATH: emptyBin,
+    },
+    encoding: "utf8",
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /Node\.js was not found on PATH/);
+  assert.match(result.stdout, /Node\.js 22\.15\.0\+ is required/);
+  assert.match(result.stdout, /rerun Ghost Engineer installer/i);
+  assert.match(result.stdout, /curl -fsSL https:\/\/ghost-engineer\.pages\.dev\/install\.sh \| bash/);
+});
+
+test("web installer guides clearly when Node.js version is below 22.15.0", () => {
+  const installScript = join(webDist.pathname, "install.sh");
+  const binDir = mkdtempSync(join(tmpdir(), "ghost-install-old-node-"));
+  const nodeStub = join(binDir, "node");
+  const bashPath = resolveBash();
+
+  writeFileSync(
+    nodeStub,
+    [
+      "#!/usr/bin/env bash",
+      "if [ \"${1:-}\" = \"--version\" ]; then",
+      "  echo \"v22.14.0\"",
+      "  exit 0",
+      "fi",
+      "echo \"v22.14.0\"",
+      "",
+    ].join("\n"),
+  );
+  chmodSync(nodeStub, 0o755);
+
+  const result = spawnSync(bashPath, [installScript], {
+    env: {
+      ...process.env,
+      PATH: `${binDir}:${process.env.PATH ?? ""}`,
+    },
+    encoding: "utf8",
+  });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /requires Node\.js 22\.15\.0 or newer/);
+  assert.match(result.stdout, /Found v22\.14\.0/);
+  assert.match(result.stdout, /curl -fsSL https:\/\/ghost-engineer\.pages\.dev\/install\.sh \| bash/);
 });
 
 test("web dev server falls back when the requested port is busy", async () => {
@@ -106,6 +165,18 @@ function httpGet(url) {
       response.on("end", () => resolve(body));
     }).on("error", reject);
   });
+}
+
+function resolveBash() {
+  if (existsSync("/bin/bash")) {
+    return "/bin/bash";
+  }
+
+  if (existsSync("/usr/bin/bash")) {
+    return "/usr/bin/bash";
+  }
+
+  return "bash";
 }
 
 async function waitFor(predicate, timeoutMs) {

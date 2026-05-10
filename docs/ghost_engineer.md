@@ -85,6 +85,8 @@ Example installation:
 curl -fsSL https://ghost-engineer.pages.dev/install.sh | bash
 ```
 
+The installer verifies Node.js `22.15.0` or newer and prints concrete next-step commands when Node.js is missing or below baseline.
+
 For local source installation:
 
 ```bash
@@ -116,7 +118,7 @@ Ghost Engineer does not install external software silently. Users can explicitly
 ghost setup bob --install
 ```
 
-Bob Shell requires Node.js 22.15.0 or later. Interactive Bob Shell sessions use IBMid authentication by default. IBM Bob is a separate IBM product and is not bundled with Ghost Engineer.
+Bob Shell requires Node.js 22.15.0 or later, and Ghost Engineer aligns to the same runtime baseline for the complete workflow. Interactive Bob Shell sessions use IBMid authentication by default. IBM Bob is a separate IBM product and is not bundled with Ghost Engineer.
 
 ### 2. Ghost CLI (Core Platform)
 
