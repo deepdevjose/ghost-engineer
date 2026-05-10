@@ -123,9 +123,10 @@ test("web installer Fedora guidance includes version check after install", () =>
   const installScript = join(webDist.pathname, "install.sh");
   const contents = readFileSync(installScript, "utf8");
 
-  const fedoraSection = contents.match(/if is_fedora_rhel_like[\s\S]*?fi;/)?.[0] ?? "";
+  const fedoraSection = contents.match(/if is_fedora_rhel_like[\s\S]*?elif/)?.[0] ?? "";
+  assert.ok(fedoraSection.length > 0, "Fedora section should be found");
   assert.match(fedoraSection, /node --version/);
-  assert.match(fedoraSection, /nvm/);
+  assert.match(contents, /nvm.*install 22/);
 });
 
 test("web installer creates ~/.local/bin launcher instead of npm link", () => {
