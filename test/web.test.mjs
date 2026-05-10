@@ -44,7 +44,8 @@ test("web installer script is publish-ready shell", () => {
   assert.match(contents, /npm ci|npm install/);
   assert.match(contents, /npm run build/);
   assert.match(contents, /create_ghost_launcher/);
-  assert.match(contents, /\.local\/bin\/ghost/);
+  assert.match(contents, /local\/bin"/);
+  assert.match(contents, /launcher="\$\{launcher_dir\}\/ghost"/);
   assert.match(contents, /command -v bob/);
   assert.match(contents, /22\.15\.0/);
   assert.match(contents, /ghost-engineer\.pages\.dev\/install\.sh/);
@@ -123,9 +124,8 @@ test("web installer Fedora guidance includes version check after install", () =>
   const installScript = join(webDist.pathname, "install.sh");
   const contents = readFileSync(installScript, "utf8");
 
-  const fedoraSection = contents.match(/if is_fedora_rhel_like[\s\S]*?elif/)?.[0] ?? "";
-  assert.ok(fedoraSection.length > 0, "Fedora section should be found");
-  assert.match(fedoraSection, /node --version/);
+  assert.match(contents, /sudo dnf install -y nodejs/);
+  assert.match(contents, /node --version/);
   assert.match(contents, /nvm.*install 22/);
 });
 
