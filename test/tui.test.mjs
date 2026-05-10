@@ -1,13 +1,23 @@
 import assert from "node:assert/strict";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { analyzeRepository } from "../packages/core/dist/index.js";
 import {
   actionForView,
+  createErrorSnapshot,
   loadWorkbenchSnapshot,
   moveSelection,
+  renderWelcomeText,
+  runWorkbench,
   renderStaticWorkbench,
   shouldUseColor,
 } from "../packages/tui/dist/index.js";
@@ -58,6 +68,74 @@ test("static workbench renders Bob missing and detected states", () => {
     }),
   );
   assert.match(detected, /IBM Bob      ready/);
+});
+
+test("snapshot loading survives corrupt project context", () => {
+  const root = createFixtureRepository("ghost-tui-corrupt-");
+  mkdirSync(join(root, ".ghost"), { recursive: true });
+  writeFileSync(join(root, ".ghost", "architecture.json"), "{ definitely not json");
+
+  const snapshot = loadWorkbenchSnapshot({
+    cwd: root,
+    bobCommand: join(root, "missing-bob"),
+  });
+
+  assert.equal(snapshot.workspaceExists, true);
+  assert.equal(snapshot.project?.projectName, root.split("/").at(-1));
+  assert.match(snapshot.warnings.join("\n"), /Could not read \.ghost\/architecture\.json/);
+});
+
+test("artifact loading handles broken symlinks and truncates large trees", () => {
+  const root = createFixtureRepository("ghost-tui-artifacts-");
+  const ghost = join(root, ".ghost");
+  mkdirSync(ghost, { recursive: true });
+  for (let index = 0; index < 220; index += 1) {
+    writeFileSync(join(ghost, `artifact-${index}.txt`), "ok\n");
+  }
+  symlinkSync(join(root, "missing-target"), join(ghost, "broken-link"));
+
+  const snapshot = loadWorkbenchSnapshot({
+    cwd: root,
+    bobCommand: join(root, "missing-bob"),
+  });
+
+  assert.equal(snapshot.workspaceExists, true);
+  assert.ok(snapshot.artifacts.length <= 200);
+  assert.match(snapshot.warnings.join("\n"), /Artifact tree truncated/);
+});
+
+test("static workbench uses a controlled fallback when snapshot loading fails", () => {
+  let output = "";
+  runWorkbench({
+    stdout: {
+      isTTY: false,
+      write(value) {
+        output += String(value);
+        return true;
+      },
+    },
+    stdin: { isTTY: false },
+    services: {
+      ...createMockServices([]),
+      loadSnapshot: () => {
+        throw new Error("snapshot boom");
+      },
+    },
+  });
+
+  assert.match(output, /Workbench startup failed: snapshot boom/);
+  assert.match(output, /Resolve the startup error/);
+  assert.doesNotMatch(output, /\u001b\[/);
+});
+
+test("welcome rendering exposes professional startup context", () => {
+  const snapshot = createErrorSnapshot(new Error("startup failed"), "/tmp/example");
+  const welcome = renderWelcomeText(snapshot);
+
+  assert.match(welcome, /Welcome to/);
+  assert.match(welcome, /GHOST ENGINEER WORKBENCH/);
+  assert.match(welcome, /Version 0\.1\.0/);
+  assert.match(welcome, /Helpful keys/);
 });
 
 test("navigation wraps through sidebar items", () => {

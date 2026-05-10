@@ -25,6 +25,9 @@ export function renderStaticWorkbench(snapshot: WorkbenchSnapshot): string {
     "",
     "Recommended next actions",
     ...snapshot.recommendations.map((item) => `  - ${item}`),
+    ...(snapshot.warnings.length > 0
+      ? ["", "Warnings", ...snapshot.warnings.map((item) => `  ! ${item}`)]
+      : []),
     "",
     "Artifacts",
     snapshot.artifacts.length > 0

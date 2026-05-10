@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { render } from "ink";
 import { WorkbenchApp } from "./components/WorkbenchApp.js";
-import { createWorkbenchServices, loadWorkbenchSnapshot } from "./services.js";
+import { createErrorSnapshot, createWorkbenchServices, loadWorkbenchSnapshot } from "./services.js";
 import { renderStaticWorkbench } from "./render-static.js";
 import { shouldUseColor } from "./theme.js";
 import type { WorkbenchServices } from "./types.js";
@@ -14,6 +14,7 @@ export {
 } from "./navigation.js";
 export { actionForView } from "./actions.js";
 export {
+  createErrorSnapshot,
   createWorkbenchServices,
   deriveRecommendations,
   loadArtifactTree,
@@ -58,7 +59,7 @@ export function runWorkbench(options: RunWorkbenchOptions = {}): void {
     });
 
   if (!stdout.isTTY || !stdin.isTTY) {
-    stdout.write(`${renderStaticWorkbench(services.loadSnapshot())}\n`);
+    stdout.write(`${renderStaticWorkbench(safeLoadSnapshot(services))}\n`);
     return;
   }
 
@@ -80,8 +81,8 @@ function WorkbenchContainer({
   services: WorkbenchServices;
   colorEnabled: boolean;
 }) {
-  const [snapshot, setSnapshot] = useState(() => services.loadSnapshot());
-  const refresh = useCallback(() => setSnapshot(services.loadSnapshot()), [services]);
+  const [snapshot, setSnapshot] = useState(() => safeLoadSnapshot(services));
+  const refresh = useCallback(() => setSnapshot(safeLoadSnapshot(services)), [services]);
   const stableServices = useMemo(() => services, [services]);
 
   return (
@@ -92,4 +93,12 @@ function WorkbenchContainer({
       colorEnabled={colorEnabled}
     />
   );
+}
+
+function safeLoadSnapshot(services: WorkbenchServices) {
+  try {
+    return services.loadSnapshot();
+  } catch (error) {
+    return createErrorSnapshot(error);
+  }
 }

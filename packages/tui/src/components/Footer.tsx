@@ -5,16 +5,20 @@ import type { WorkbenchView } from "../types.js";
 
 export function Footer({
   activeView,
+  installConfirmation,
   colorEnabled,
 }: {
   activeView: WorkbenchView;
+  installConfirmation: boolean;
   colorEnabled: boolean;
 }) {
   const extras =
     activeView === "analyze"
       ? "  b Bob analysis"
       : activeView === "bob"
-        ? "  i install"
+        ? installConfirmation
+          ? "  i confirm installer"
+          : "  i prepare installer"
         : "";
 
   return (

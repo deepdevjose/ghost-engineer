@@ -11,11 +11,13 @@ export function BobView({
   snapshot,
   busy,
   lastOutput,
+  installConfirmation,
   colorEnabled,
 }: {
   snapshot: WorkbenchSnapshot;
   busy?: string;
   lastOutput?: string;
+  installConfirmation: boolean;
   colorEnabled: boolean;
 }) {
   const status = snapshot.bobStatus;
@@ -50,7 +52,9 @@ export function BobView({
       </Box>
       <Box marginTop={1} flexDirection="column">
         <Text color={inkColor("cyan", colorEnabled)}>Enter  Show guided setup</Text>
-        <Text color={inkColor("cyan", colorEnabled)}>i      Run official Bob installer</Text>
+        <Text color={inkColor("cyan", colorEnabled)}>
+          i      {installConfirmation ? "Confirm official Bob installer" : "Prepare Bob installer"}
+        </Text>
         <Text color={inkColor("gray", colorEnabled)}>
           Installer: {BOB_SHELL_INSTALL_COMMAND}
         </Text>
@@ -58,6 +62,11 @@ export function BobView({
           Bob is a separate IBM product and requires IBMid authentication.
         </Text>
       </Box>
+      {installConfirmation ? (
+        <Text color={inkColor("yellow", colorEnabled)}>
+          ! Press i again to run the official installer. Any navigation key cancels.
+        </Text>
+      ) : null}
       {busy ? <Text color={inkColor("yellow", colorEnabled)}>! {busy}</Text> : null}
       {lastOutput ? <OutputPreview output={lastOutput} colorEnabled={colorEnabled} /> : null}
     </Box>

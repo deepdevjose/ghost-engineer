@@ -1,6 +1,8 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
 import {
+  BOB_NODE_MINIMUM_VERSION,
+  DEFAULT_BOB_COMMAND,
   analyzeRepository,
   detectBobStatus,
   explainRepository,
@@ -10,7 +12,7 @@ import {
   generateTestPlan,
   setupBob,
 } from "@ghost-engineer/core";
-import type { GhostBobStatus } from "@ghost-engineer/shared";
+import type { GhostBobCommandSource, GhostBobStatus } from "@ghost-engineer/shared";
 import type {
   LoadedProjectContext,
   WorkbenchServices,
@@ -22,6 +24,8 @@ interface ServicesOptions {
   cwd?: string;
   bobCommand?: string;
 }
+
+const MAX_ARTIFACTS = 200;
 
 export function createWorkbenchServices(options: ServicesOptions = {}): WorkbenchServices {
   const cwd = resolve(options.cwd ?? process.cwd());
@@ -55,10 +59,11 @@ export function createWorkbenchServices(options: ServicesOptions = {}): Workbenc
 export function loadWorkbenchSnapshot(options: ServicesOptions = {}): WorkbenchSnapshot {
   const cwd = resolve(options.cwd ?? process.cwd());
   const workspacePath = join(cwd, ".ghost");
-  const workspaceExists = existsSync(workspacePath) && statSync(workspacePath).isDirectory();
-  const bobStatus = detectBobStatus({ command: options.bobCommand });
-  const project = workspaceExists ? loadProjectContext(cwd) : undefined;
-  const artifacts = workspaceExists ? loadArtifactTree(cwd) : [];
+  const warnings: string[] = [];
+  const workspaceExists = safeIsDirectory(workspacePath, warnings, ".ghost");
+  const bobStatus = safeDetectBobStatus(options.bobCommand, warnings);
+  const project = workspaceExists ? loadProjectContext(cwd, warnings) : undefined;
+  const artifacts = workspaceExists ? loadArtifactTree(cwd, warnings) : [];
 
   return {
     cwd,
@@ -68,6 +73,25 @@ export function loadWorkbenchSnapshot(options: ServicesOptions = {}): WorkbenchS
     bobStatus,
     recommendations: deriveRecommendations(workspaceExists, bobStatus, project),
     artifacts,
+    warnings,
+  };
+}
+
+export function createErrorSnapshot(error: unknown, cwd = process.cwd()): WorkbenchSnapshot {
+  const message = error instanceof Error ? error.message : String(error);
+  const bobStatus = createFallbackBobStatus();
+
+  return {
+    cwd: resolve(cwd),
+    nodeVersion: process.versions.node,
+    workspaceExists: false,
+    bobStatus,
+    recommendations: [
+      "Resolve the startup error",
+      "Run command mode if needed: ghost analyze .",
+    ],
+    artifacts: [],
+    warnings: [`Workbench startup failed: ${message}`],
   };
 }
 
@@ -100,18 +124,24 @@ export function deriveRecommendations(
     : ["Open Analyze to refresh repository intelligence"];
 }
 
-export function loadArtifactTree(cwd: string): WorkspaceArtifact[] {
+export function loadArtifactTree(cwd: string, warnings: string[] = []): WorkspaceArtifact[] {
   const root = join(cwd, ".ghost");
-  if (!existsSync(root)) {
+  if (!safeIsDirectory(root, warnings, ".ghost")) {
     return [];
   }
 
   const artifacts: WorkspaceArtifact[] = [];
-  collectArtifacts(root, root, artifacts, 0);
+  collectArtifacts(root, root, artifacts, 0, warnings);
+  if (artifacts.length >= MAX_ARTIFACTS) {
+    warnings.push(`Artifact tree truncated after ${MAX_ARTIFACTS} entries.`);
+  }
   return artifacts;
 }
 
-function loadProjectContext(cwd: string): LoadedProjectContext | undefined {
+function loadProjectContext(
+  cwd: string,
+  warnings: string[] = [],
+): LoadedProjectContext | undefined {
   const architecturePath = join(cwd, ".ghost", "architecture.json");
   if (!existsSync(architecturePath)) {
     return {
@@ -137,6 +167,7 @@ function loadProjectContext(cwd: string): LoadedProjectContext | undefined {
       analyzedAt: architecture.analyzedAt,
     };
   } catch {
+    warnings.push("Could not read .ghost/architecture.json. Showing fallback project context.");
     return {
       projectName: basename(cwd),
     };
@@ -148,22 +179,83 @@ function collectArtifacts(
   directory: string,
   artifacts: WorkspaceArtifact[],
   depth: number,
+  warnings: string[],
 ): void {
-  if (depth > 4) {
+  if (depth > 4 || artifacts.length >= MAX_ARTIFACTS) {
     return;
   }
 
-  for (const entry of readdirSync(directory).sort()) {
+  let entries: string[];
+  try {
+    entries = readdirSync(directory).sort();
+  } catch {
+    warnings.push(`Could not read artifact directory: ${relative(root, directory) || ".ghost"}`);
+    return;
+  }
+
+  for (const entry of entries) {
+    if (artifacts.length >= MAX_ARTIFACTS) {
+      return;
+    }
+
     const path = join(directory, entry);
-    const stats = statSync(path);
+    let stats;
+    try {
+      stats = lstatSync(path);
+    } catch {
+      continue;
+    }
+
     const artifact: WorkspaceArtifact = {
       path: relative(root, path) || ".",
-      kind: stats.isDirectory() ? "directory" : "file",
+      kind: stats.isDirectory() && !stats.isSymbolicLink() ? "directory" : "file",
     };
     artifacts.push(artifact);
 
-    if (stats.isDirectory()) {
-      collectArtifacts(root, path, artifacts, depth + 1);
+    if (stats.isDirectory() && !stats.isSymbolicLink()) {
+      collectArtifacts(root, path, artifacts, depth + 1, warnings);
     }
   }
+}
+
+function safeIsDirectory(path: string, warnings: string[], label: string): boolean {
+  try {
+    return existsSync(path) && statSync(path).isDirectory();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    warnings.push(`Could not inspect ${label}: ${message}`);
+    return false;
+  }
+}
+
+function safeDetectBobStatus(
+  command: string | undefined,
+  warnings: string[],
+): GhostBobStatus {
+  try {
+    return detectBobStatus({ command });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    warnings.push(`Could not check IBM Bob status: ${message}`);
+    return createFallbackBobStatus(command);
+  }
+}
+
+function createFallbackBobStatus(command = DEFAULT_BOB_COMMAND): GhostBobStatus {
+  const commandSource: GhostBobCommandSource = command === DEFAULT_BOB_COMMAND ? "default" : "cli";
+
+  return {
+    command,
+    commandSource,
+    executableAvailable: false,
+    appearsCallable: false,
+    exitCode: null,
+    stdout: "",
+    stderr: "",
+    error: "Bob status check failed before execution.",
+    nodeVersion: process.versions.node,
+    minimumNodeVersion: BOB_NODE_MINIMUM_VERSION,
+    nodeMeetsMinimum: true,
+    statusText: "Bob status is unavailable.",
+  };
 }

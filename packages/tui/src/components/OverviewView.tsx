@@ -50,6 +50,18 @@ export function OverviewView({
           - {recommendation}
         </Text>
       ))}
+      {snapshot.warnings.length > 0 ? (
+        <Box marginTop={1} flexDirection="column">
+          <Text color={inkColor("yellow", colorEnabled)} bold>
+            Warnings
+          </Text>
+          {snapshot.warnings.slice(0, 4).map((warning) => (
+            <Text key={warning} color={inkColor("yellow", colorEnabled)}>
+              ! {warning}
+            </Text>
+          ))}
+        </Box>
+      ) : null}
     </Box>
   );
 }

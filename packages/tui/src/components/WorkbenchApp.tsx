@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import {
   indexForView,
@@ -39,6 +39,7 @@ export function WorkbenchApp({
   colorEnabled: boolean;
 }) {
   const app = useApp();
+  const mountedRef = useRef(true);
   const [selectedIndex, setSelectedIndex] = useState(indexForView("overview"));
   const [activeView, setActiveView] = useState<WorkbenchView>("overview");
   const [showWelcome, setShowWelcome] = useState(true);
@@ -46,8 +47,16 @@ export function WorkbenchApp({
     createActivity("info", "Workbench started"),
   ]);
   const [busy, setBusy] = useState<string | undefined>();
+  const busyRef = useRef<string | undefined>();
   const [lastOutputByView, setLastOutputByView] = useState<Partial<Record<WorkbenchView, string>>>({});
   const [showHelp, setShowHelp] = useState(false);
+  const [installConfirmation, setInstallConfirmation] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const addActivity = useCallback((level: ActivityEvent["level"], message: string) => {
     setActivity((current) => [...current, createActivity(level, message)]);
@@ -55,19 +64,41 @@ export function WorkbenchApp({
 
   const runTask = useCallback(
     (view: WorkbenchView, label: string, task: () => string) => {
+      if (busyRef.current) {
+        addActivity("warning", `Still running: ${busyRef.current}`);
+        setLastOutputByView((current) => ({
+          ...current,
+          [view]: `Still running: ${busyRef.current}. Wait for it to finish before starting another task.`,
+        }));
+        return;
+      }
+
+      busyRef.current = label;
       setBusy(label);
       addActivity("info", `${label} started`);
       setTimeout(() => {
+        if (!mountedRef.current) {
+          busyRef.current = undefined;
+          return;
+        }
+
         try {
           const output = task();
+          if (!mountedRef.current) {
+            return;
+          }
           setLastOutputByView((current) => ({ ...current, [view]: output }));
           addActivity("success", `${label} completed`);
           refresh();
         } catch (error) {
+          if (!mountedRef.current) {
+            return;
+          }
           const message = error instanceof Error ? error.message : String(error);
           setLastOutputByView((current) => ({ ...current, [view]: message }));
           addActivity("error", `${label} failed`);
         } finally {
+          busyRef.current = undefined;
           setBusy(undefined);
         }
       }, 0);
@@ -79,11 +110,13 @@ export function WorkbenchApp({
     (view: WorkbenchView) => {
       const action = actionForView(view, services);
       if (action.refreshOnly) {
+        setInstallConfirmation(false);
         refresh();
         addActivity("info", action.run());
         return;
       }
 
+      setInstallConfirmation(false);
       runTask(view, action.label, action.run);
     },
     [addActivity, refresh, runTask, services],
@@ -99,6 +132,7 @@ export function WorkbenchApp({
       if (input === "?") {
         setShowWelcome(false);
         setShowHelp(true);
+        setInstallConfirmation(false);
         addActivity("info", "Help opened");
         return;
       }
@@ -121,6 +155,7 @@ export function WorkbenchApp({
 
       if (key.return) {
         setShowWelcome(false);
+        setInstallConfirmation(false);
         addActivity("info", "Workbench opened");
       }
 
@@ -134,38 +169,58 @@ export function WorkbenchApp({
 
     if (input === "?") {
       setShowHelp((current) => !current);
+      setInstallConfirmation(false);
       return;
     }
 
     if (input === "r") {
+      setInstallConfirmation(false);
       refresh();
       addActivity("info", "Status refreshed");
       return;
     }
 
     if (key.upArrow || input === "k") {
+      setInstallConfirmation(false);
       setSelectedIndex((current) => moveSelection(current, -1));
       return;
     }
 
     if (key.downArrow || input === "j") {
+      setInstallConfirmation(false);
       setSelectedIndex((current) => moveSelection(current, 1));
       return;
     }
 
     if (key.return) {
       const selectedView = viewAt(selectedIndex);
+      setInstallConfirmation(false);
       setActiveView(selectedView);
       runPrimaryAction(selectedView);
       return;
     }
 
     if (activeView === "analyze" && input === "b") {
+      setInstallConfirmation(false);
       runTask("analyze", "Bob-powered analysis", () => services.analyzeWithBob().summary);
       return;
     }
 
     if (activeView === "bob" && input === "i") {
+      if (!installConfirmation) {
+        setInstallConfirmation(true);
+        addActivity("warning", "Bob installer confirmation requested");
+        setLastOutputByView((current) => ({
+          ...current,
+          bob: [
+            "Bob Shell installer is external software from IBM.",
+            "Press `i` again to run the official installer, or press any navigation key to cancel.",
+          ].join("\n"),
+        }));
+        return;
+      }
+
+      setInstallConfirmation(false);
       runTask("bob", "Bob installer", () => services.setupBob(true));
     }
   });
@@ -196,12 +251,17 @@ export function WorkbenchApp({
               activity,
               busy,
               lastOutput: lastOutputByView[activeView],
+              installConfirmation,
               colorEnabled,
             })
           )}
         </Panel>
       </Box>
-      <Footer activeView={activeView} colorEnabled={colorEnabled} />
+      <Footer
+        activeView={activeView}
+        installConfirmation={installConfirmation}
+        colorEnabled={colorEnabled}
+      />
     </Box>
   );
 }
@@ -212,6 +272,7 @@ function renderView({
   activity,
   busy,
   lastOutput,
+  installConfirmation,
   colorEnabled,
 }: {
   activeView: WorkbenchView;
@@ -219,6 +280,7 @@ function renderView({
   activity: ActivityEvent[];
   busy?: string;
   lastOutput?: string;
+  installConfirmation: boolean;
   colorEnabled: boolean;
 }) {
   switch (activeView) {
@@ -239,6 +301,7 @@ function renderView({
           snapshot={snapshot}
           busy={busy}
           lastOutput={lastOutput}
+          installConfirmation={installConfirmation}
           colorEnabled={colorEnabled}
         />
       );

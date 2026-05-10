@@ -43,6 +43,7 @@ export interface WorkbenchSnapshot {
   bobStatus: GhostBobStatus;
   recommendations: string[];
   artifacts: WorkspaceArtifact[];
+  warnings: string[];
 }
 
 export interface AnalyzeActionResult {

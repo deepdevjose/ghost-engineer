@@ -84,6 +84,11 @@ export function WelcomeScreen({
         <Text color={inkColor("yellow", colorEnabled)}>
           Bob Shell is a separate IBM product and requires IBMid authentication.
         </Text>
+        {snapshot.warnings.slice(0, 2).map((warning) => (
+          <Text key={warning} color={inkColor("yellow", colorEnabled)}>
+            ! {warning}
+          </Text>
+        ))}
         <Text italic color={inkColor("gray", colorEnabled)}>
           Users should independently verify AI-generated content.
         </Text>
